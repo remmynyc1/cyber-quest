@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Quest | Secure Portal Login</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #1e293b;
+            --accent-cyan: #38bdf8;
+            --accent-green: #4ade80;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-radius: 8px;
+            width: 350px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+        h2 { margin-top: 0; color: var(--accent-cyan); font-size: 1.2rem; text-transform: uppercase; }
+        input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .btn-login {
+            width: 100%;
+            background: var(--accent-cyan);
+            color: #0f172a;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-login:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Cyber Quest Authentication</h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Enter credentials to access assigned portal.</p>
+        <form action="/login" method="POST">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Email / Username</label>
+            <input type="text" name="username" required>
+            
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Password / Token</label>
+            <input type="password" name="password" required>
+            
+            <button type="submit" class="btn-login">Authenticate Access</button>
+        </form>
+    </div>
+</body>
+</html>

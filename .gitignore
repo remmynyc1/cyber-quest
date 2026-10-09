@@ -1,0 +1,15 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+
+# IDE Configuration
+.vscode/
+.idea/
+*.iml
+
+# OS Metadata
+.DS_Store
+Thumbs.db
+desktop.ini

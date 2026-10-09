@@ -1,0 +1,7 @@
+# Coding Assistant Behavior Rules 
+
+- Output raw, production-ready code blocks without introductory filler, conversational pleasantries, or concluding summaries. 
+- Follow standard object-oriented design patterns, encapsulation, and clean architecture principles. 
+- Use concise inline comments only for non-trivial logic; omit redundant explanatory prose.
+- Apply defensive programming: sanitize user inputs, include explicit null-checks, and handle boundary conditions. 
+- When generating units tests, generate parameterized test with jUnit assertions covering failure branches and edge cases. 

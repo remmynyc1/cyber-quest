@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Quest // SOC Command</title>
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: #111827;
+            --border: #1f293d;
+            --cyan: #38bdf8;
+            --cyan-glow: rgba(56, 189, 248, 0.2);
+            --red: #ef4444;
+            --green: #10b981;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 24px;
+            min-height: 100vh;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge-live {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--green);
+            border: 1px solid var(--green);
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            font-size: 18px;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        /* 4 Metrics Cards - Locked Grid */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            white-space: nowrap;
+        }
+
+        .metric-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--cyan);
+            line-height: 1.2;
+        }
+
+        .metric-value.status-red {
+            color: var(--red);
+            font-family: monospace;
+        }
+
+        .metric-value.status-green {
+            color: var(--green);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Two-Column Layout */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(31, 41, 61, 0.5);
+        }
+
+        tr:hover {
+            background: rgba(56, 189, 248, 0.03);
+        }
+
+        .role-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--cyan);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .quest-active {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .quest-inactive {
+            color: var(--text-muted);
+        }
+
+        /* Threat Box */
+        .threat-box {
+            border-left: 4px solid var(--red);
+            background: rgba(239, 68, 68, 0.06);
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .threat-title {
+            color: var(--red);
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .hex-preview-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            background: #0b1120;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .hex-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background-color: #E63946;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hex-code {
+            font-family: monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: #E63946;
+        }
+
+        .qr-placeholder {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #080c14;
+        }
+
+        /* Buttons & Forms */
+        button {
+            cursor: pointer;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--cyan);
+            color: #0b1120;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 12px var(--cyan-glow);
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        input, select {
+            width: 100%;
+            background: #080c14;
+            border: 1px solid var(--border);
+            padding: 8px 10px;
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 13px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--cyan);
+        }
+    </style>
+</head>
+<body>
+
+    <section id="threat-intelligence-feed">
+  <h3>Active Threat Feeds</h3>
+  <table border="1" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Event Type</th>
+        <th>Severity</th>
+        <th>Target Email</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="incident-table-body">
+      <!-- Populated dynamically via fetch -->
+    </tbody>
+  </table>
+</section>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <h1>CYBER QUEST // SOC DASHBOARD</h1>
+            <span class="badge-live">● Active Ingestion</span>
+        </div>
+        <div>
+            <button class="btn-primary" onclick="loadUsers()">↻ Refresh Ingestion</button>
+        </div>
+    </header>
+
+    <!-- 4 Equal-Width Metric Cards -->
+    <div class="metrics-row">
+        <div class="metric-card">
+            <div class="metric-label">Enrolled Agents</div>
+            <div class="metric-value" id="totalUsers">-</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">In Starter Quest</div>
+            <div class="metric-value" id="enrolledCount">-</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Target Threat</div>
+            <div class="metric-value status-red">#E63946</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Sandbox Firewall</div>
+            <div class="metric-value status-green">● pfSense Online</div>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <div class="grid-container">
+
+        <!-- Left: Personnel Table -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Active Personnel & Ingested Agents</span>
+                    <span class="subtitle" id="lastUpdated">Updated just now</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Starter Quest</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading agents...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Right: Threat & Manual Register -->
+        <div>
+            <!-- Active Anomaly -->
+            <div class="card">
+                <span class="card-title">Active Security Anomaly</span>
+                <div class="threat-box" style="margin-top: 14px;">
+                    <div class="threat-title">THREAT-084-INFILTRATION</div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                        Synthetic anomaly detected in network logs. Physical-to-digital validation required to trigger pfSense mitigation.
+                    </p>
+                    <div class="hex-preview-box">
+                        <div class="hex-swatch"></div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-muted);">REQUIRED COLOR KEY</div>
+                            <div class="hex-code">#E63946 (Crimson)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="qr-placeholder">
+                    <div style="font-size: 12px; color: var(--cyan); font-weight: 600; margin-bottom: 4px;">DESKTOP QR BRIDGE READY</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Android companion app scans here for CameraX sync.</div>
+                </div>
+            </div>
+
+            <!-- Manual Registration Form -->
+            <div class="card">
+                <span class="card-title">Enroll Agent (Manual)</span>
+                <form id="addUserForm" onsubmit="createUser(event)" style="margin-top: 14px;">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="formName" placeholder="e.g. Marcus Vance" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Corporate Email</label>
+                        <input type="email" id="formEmail" placeholder="m.vance@company.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Security Clearance Role</label>
+                        <select id="formRole">
+                            <option value="ROLE_EMPLOYEE">ROLE_EMPLOYEE (Trainee)</option>
+                            <option value="ROLE_ANALYST">ROLE_ANALYST (SOC Tier 1)</option>
+                            <option value="ROLE_MANAGER">ROLE_MANAGER (Supervisor)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 6px;">Register Agent</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Logic -->
+    <script>
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/users');
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                const users = await response.json();
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+
+                let enrolledCount = 0;
+
+                users.forEach(user => {
+                    if (user.enrolledInStarterQuest) enrolledCount++;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="color: var(--text-muted); font-family: monospace;">#${user.id}</td>
+                        <td style="font-weight: 600;">${user.fullName || 'Unnamed'}</td>
+                        <td style="color: var(--text-muted);">${user.email}</td>
+                        <td><span class="role-pill">${user.role || 'ROLE_USER'}</span></td>
+                        <td>
+                            <span class="${user.enrolledInStarterQuest ? 'quest-active' : 'quest-inactive'}">
+                                ${user.enrolledInStarterQuest ? '● Enrolled' : '○ Pending'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-delete" onclick="deleteUser(${user.id})">Remove</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                document.getElementById('totalUsers').innerText = users.length;
+                document.getElementById('enrolledCount').innerText = enrolledCount;
+                document.getElementById('lastUpdated').innerText = 'Synced: ' + new Date().toLocaleTimeString();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('userTableBody').innerHTML = 
+                    `<tr><td colspan="6" style="color: var(--red); text-align: center;">Failed to connect to /api/users</td></tr>`;
+            }
+        }
+
+        async function createUser(event) {
+            event.preventDefault();
+
+            const newUser = {
+                fullName: document.getElementById('formName').value,
+                email: document.getElementById('formEmail').value,
+                role: document.getElementById('formRole').value,
+                enrolledInStarterQuest: true,
+                passwordHash: "$2a$10$DefaultHashedPasswordPlaceHolderStringForMockPurposes"
+            };
+
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUser)
+            });
+
+            if (response.ok) {
+                document.getElementById('addUserForm').reset();
+                loadUsers();
+            } else {
+                alert('Error creating user.');
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm(`Are you sure you want to remove Agent #${id}?`)) return;
+
+            const response = await fetch(`/api/users/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                loadUsers();
+            } else {
+                alert('Failed to delete user.');
+            }
+        }
+
+        loadUsers();
+        setInterval(loadUsers, 10000);
+    </script>
+    <script>
+  async function loadDashboardMetrics() {
+    try {
+      const response = await fetch('/api/dashboard/metrics');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+
+      // Bind to existing dashboard elements if present, or update status container
+      if (document.getElementById('total-operatives')) {
+        document.getElementById('total-operatives').innerText = data.totalOperatives;
+      }
+      if (document.getElementById('active-threats')) {
+        document.getElementById('active-threats').innerText = data.activeThreats;
+      }
+      if (document.getElementById('system-status')) {
+        document.getElementById('system-status').innerText = data.systemStatus;
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard metrics:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDashboardMetrics();
+    setInterval(loadDashboardMetrics, 5000); // 5-second polling interval
+  });
+</script>
+
+<script>
+async function loadIncidentLogs() {
+  try {
+    const response = await fetch('/api/dashboard/logs');
+    if (!response.ok) throw new Error('Failed to fetch security logs');
+    const logs = await response.json();
+
+    const tbody = document.getElementById('incident-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = logs.map(log => `
+      <tr>
+        <td>${log.id}</td>
+        <td>${log.eventType}</td>
+        <td style="color: ${log.severity === 'CRITICAL' || log.severity === 'HIGH' ? 'red' : 'orange'}">
+          ${log.severity}
+        </td>
+        <td>${log.targetEmail}</td>
+        <td>${log.resolved ? '<span style="color: green;">RESOLVED</span>' : '<span style="color: red;">ACTIVE</span>'}</td>
+        <td>
+          ${log.resolved ? '—' : `<button onclick="resolveThreat(${log.id})">Neutralize</button>`}
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.error('Incident log load failure:', error);
+  }
+}
+
+async function resolveThreat(id) {
+  try {
+    const response = await fetch(`/api/dashboard/threats/${id}/resolve`, {
+      method: 'POST'
+    });
+    if (response.ok) {
+      loadDashboardMetrics();
+      loadIncidentLogs();
+    }
+  } catch (error) {
+    console.error('Failed to resolve threat:', error);
+  }
+}
+
+// Call on load and on the existing refresh interval
+document.addEventListener('DOMContentLoaded', () => {
+  loadIncidentLogs();
+  setInterval(loadIncidentLogs, 5000);
+});
+</script>
+
+<a href="/logout" style="color: #ff5555; text-decoration: none; font-weight: bold;">Logout</a>
+
+</body>
+</html>

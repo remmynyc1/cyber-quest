@@ -5,8 +5,12 @@ $loginBody = @{
     password = "employee26"
 }
 
-# Authenticate using PowerShell 5.1 compatible redirection handling
-Invoke-WebRequest -Uri "http://localhost:8080/login" -Method POST -Body $loginBody -WebSession $session -MaximumRedirection 0 -ErrorAction SilentlyContinue | Out-Null
+# Capture login redirect safely to retain session cookie
+try {
+    $null = Invoke-WebRequest -Uri "http://localhost:8080/login" -Method POST -Body $loginBody -WebSession $session -MaximumRedirection 0 -ErrorAction Stop
+} catch {
+    # HTTP 302 Found redirect to /employee.html is expected and sets JSESSIONID
+}
 
 # 2. Define curriculum payload
 $curriculum = @(

@@ -1,0 +1,71 @@
+services:
+  cyberquest-primary-db:
+    image: postgres:16-alpine
+    container_name: cyberquest_primary
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cyberquest
+      POSTGRES_USER: cq_admin
+      POSTGRES_PASSWORD: cqadmin26
+    ports:
+      - "5432:5432"
+    volumes:
+      - primary_data:/var/lib/postgresql/data
+    networks:
+      - cq-internal-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cq_admin -d cyberquest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  cyberquest-hr-db:
+    image: postgres:16-alpine
+    container_name: cyberquest_hr
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: hr_mock_system
+      POSTGRES_USER: hr_admin
+      POSTGRES_PASSWORD: hradmin26
+    ports:
+      - "5433:5432"
+    volumes:
+      - hr_data:/var/lib/postgresql/data
+    networks:
+      - cq-internal-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hr_admin -d hr_mock_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  cyberquest-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cyberquest_app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://cyberquest_primary:5432/cyberquest
+      SPRING_DATASOURCE_USERNAME: cq_admin
+      SPRING_DATASOURCE_PASSWORD: cqadmin26
+      HR_DATASOURCE_URL: jdbc:postgresql://cyberquest_hr:5432/hr_mock_system
+      HR_DATASOURCE_USERNAME: hr_admin
+      HR_DATASOURCE_PASSWORD: hradmin26
+    depends_on:
+      cyberquest-primary-db:
+        condition: service_healthy
+      cyberquest-hr-db:
+        condition: service_healthy
+    networks:
+      - cq-internal-net
+
+volumes:
+  primary_data:
+  hr_data:
+
+networks:
+  cq-internal-net:
+    driver: bridge

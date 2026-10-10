@@ -1,20 +1,22 @@
 package com.example.demo;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-
-import java.io.IOException;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
+
+    private final CustomUserDetailsService userDetailsService;
+
+    public SecurityConfig(CustomUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -26,35 +28,32 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login.html", "/login", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/index.html", "/api/users/**").hasAnyRole("MANAGER", "CEO")
-                .requestMatchers("/employee.html").hasAnyRole("EMPLOYEE", "MANAGER", "CEO")
+                .requestMatchers("/login.html", "/login", "/api/quest/artifacts/**").permitAll()
+                .requestMatchers("/index.html", "/api/users/**", "/api/dashboard/**").hasRole("MANAGER")
+                .requestMatchers("/employee.html", "/api/quest/**").hasAnyRole("EMPLOYEE", "MANAGER")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login.html")
                 .loginProcessingUrl("/login")
-                .successHandler(roleBasedSuccessHandler())
+                .successHandler((request, response, authentication) -> {
+                    boolean isManager = authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+                    if (isManager) {
+                        response.sendRedirect("/index.html");
+                    } else {
+                        response.sendRedirect("/employee.html");
+                    }
+                })
+                .failureUrl("/login.html?error")
                 .permitAll()
             )
             .logout(logout -> logout
-                .logoutSuccessUrl("/login.html?logout")
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login.html")
                 .permitAll()
             );
-        return http.build();
-    }
 
-    @Bean
-    public AuthenticationSuccessHandler roleBasedSuccessHandler() {
-        return (HttpServletRequest request, HttpServletResponse response, Authentication authentication) -> {
-            boolean isManager = authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER") || a.getAuthority().equals("ROLE_CEO"));
-            
-            if (isManager) {
-                response.sendRedirect("/index.html");
-            } else {
-                response.sendRedirect("/employee.html");
-            }
-        };
+        return http.build();
     }
 }

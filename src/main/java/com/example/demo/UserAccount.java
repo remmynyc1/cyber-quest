@@ -1,6 +1,8 @@
 package com.example.demo;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "user_account")
@@ -16,7 +18,14 @@ public class UserAccount {
     private String passwordHash;
     private boolean enrolledInStarterQuest;
 
-    // Getters and Setters
+    @Column(name = "total_xp")
+    private Integer totalXp = 0;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_completed_challenges", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "challenge_id")
+    private Set<Long> completedChallengeIds = new HashSet<>();
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -34,4 +43,10 @@ public class UserAccount {
 
     public boolean isEnrolledInStarterQuest() { return enrolledInStarterQuest; }
     public void setEnrolledInStarterQuest(boolean enrolledInStarterQuest) { this.enrolledInStarterQuest = enrolledInStarterQuest; }
+
+    public int getTotalXp() { return totalXp != null ? totalXp : 0; }
+    public void setTotalXp(Integer totalXp) { this.totalXp = totalXp != null ? totalXp : 0; }
+
+    public Set<Long> getCompletedChallengeIds() { return completedChallengeIds; }
+    public void setCompletedChallengeIds(Set<Long> completedChallengeIds) { this.completedChallengeIds = completedChallengeIds; }
 }

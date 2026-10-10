@@ -23,10 +23,24 @@ public class QuestController {
         this.securityLogRepository = securityLogRepository;
     }
 
+    @GetMapping("/my-stats")
+    public ResponseEntity<Map<String, Object>> getMyStats(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return userRepository.findByEmail(authentication.getName())
+            .map(u -> ResponseEntity.ok(Map.<String, Object>of(
+                "fullName", u.getFullName(),
+                "email", u.getEmail(),
+                "totalXp", u.getTotalXp(),
+                "completedChallenges", u.getCompletedChallengeIds()
+            )))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/challenges")
     public List<QuestChallenge> getAvailableChallenges() {
-        // Return challenges without exposing the plaintext flag answers to the client
-        return challengeRepository.findAll().stream().peek(c -> {}).toList();
+        return challengeRepository.findAll();
     }
 
     @PostMapping("/challenges/{id}/submit")
@@ -39,25 +53,45 @@ public class QuestController {
             return ResponseEntity.status(401).build();
         }
 
+        UserAccount user = userRepository.findByEmail(authentication.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+        }
+
+        if (user.getCompletedChallengeIds().contains(id)) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "status", "ALREADY_SOLVED",
+                "message", "Artifact already verified. XP previously awarded."
+            ));
+        }
+
         String submittedAnswer = submission.getOrDefault("answer", "").trim();
 
         return challengeRepository.findById(id).map(challenge -> {
             boolean isCorrect = challenge.getFlagAnswer().equalsIgnoreCase(submittedAnswer);
 
             if (isCorrect) {
-                // Automatically log completed defensive action in SecurityLog
+                user.setTotalXp(user.getTotalXp() + challenge.getPointValue());
+                user.getCompletedChallengeIds().add(challenge.getId());
+                userRepository.save(user);
+
+                if (submittedAnswer.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}")) {
+                    DynamicFirewallFilter.blockIp(submittedAnswer);
+                }
+
                 SecurityLog successLog = new SecurityLog();
                 successLog.setEventType("DEFENSIVE_TRAINING_PASSED");
                 successLog.setSeverity("LOW");
-                successLog.setDescription("Operative successfully resolved challenge: " + challenge.getTitle());
-                successLog.setTargetEmail(authentication.getName());
+                successLog.setDescription("Operative neutralized threat vector: " + challenge.getTitle() + " (IOC: " + submittedAnswer + ")");
+                successLog.setTargetEmail(user.getEmail());
                 successLog.setResolved(true);
                 securityLogRepository.save(successLog);
 
                 return ResponseEntity.ok(Map.<String, Object>of(
                     "status", "SUCCESS",
                     "pointsEarned", challenge.getPointValue(),
-                    "message", "Challenge neutralized. Points awarded to operative record."
+                    "totalXp", user.getTotalXp(),
+                    "message", "IOC verified. Dynamic packet filter rule established."
                 ));
             } else {
                 return ResponseEntity.badRequest().body(Map.<String, Object>of(
@@ -66,5 +100,19 @@ public class QuestController {
                 ));
             }
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/leaderboard")
+    public List<Map<String, Object>> getLeaderboard() {
+        return userRepository.findAll().stream()
+            .filter(u -> "ROLE_EMPLOYEE".equals(u.getRole()))
+            .sorted((a, b) -> Integer.compare(b.getTotalXp(), a.getTotalXp()))
+            .map(u -> Map.<String, Object>of(
+                "fullName", u.getFullName(),
+                "email", u.getEmail(),
+                "totalXp", u.getTotalXp(),
+                "questsCompleted", u.getCompletedChallengeIds().size()
+            ))
+            .toList();
     }
 }

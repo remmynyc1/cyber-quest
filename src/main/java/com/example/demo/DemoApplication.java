@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
-@EnableScheduling 
+@EnableScheduling
 public class DemoApplication {
 
     public static void main(String[] args) {
@@ -28,8 +28,8 @@ public class DemoApplication {
                 manager.setRole("ROLE_MANAGER");
                 manager.setPasswordHash(passwordEncoder.encode("manager26"));
                 manager.setEnrolledInStarterQuest(true);
+                manager.setTotalXp(0);
                 userRepository.save(manager);
-                System.out.println(">>> SEEDED MANAGER ACCOUNT: manager@cyberquest.internal / manager26");
             }
 
             // Seed Employee Account
@@ -40,27 +40,64 @@ public class DemoApplication {
                 employee.setRole("ROLE_EMPLOYEE");
                 employee.setPasswordHash(passwordEncoder.encode("employee26"));
                 employee.setEnrolledInStarterQuest(true);
+                employee.setTotalXp(0);
                 userRepository.save(employee);
-                System.out.println(">>> SEEDED EMPLOYEE ACCOUNT: employee@cyberquest.internal / employee26");
             }
 
-            // Seed Defensive Quest Challenges
+            // Seed Complete 5-Module Defensive Quest Track
             if (challengeRepository.count() == 0) {
+                // Tier 1: Foundational SOC Identification
                 challengeRepository.save(new QuestChallenge(
-                    "Phishing Header Analysis",
-                    "Inspect the incoming message headers: Received: from mail-attacker.org (IP: 198.51.100.23). Identify the spoofed source IP.",
-                    "PHISHING",
-                    "198.51.100.23",
-                    100
+                    "Perimeter Port Reconnaissance Triage",
+                    "A public-facing gateway was probed during off-hours. Analysis indicates attempts against default administrative services. Submit the default unencrypted remote access port targeted.",
+                    "NETWORK_SECURITY",
+                    "23",
+                    100,
+                    "Nmap / Port Scan Analysis",
+                    "telnet_probe_alert.txt"
                 ));
+
                 challengeRepository.save(new QuestChallenge(
-                    "Default Password Exploitation",
-                    "A remote management console at 192.168.12.1 is exposing admin endpoints. Identify the default administrative credential pair.",
-                    "CREDENTIALS",
-                    "admin:admin",
-                    150
+                    "Credential Stuffing Vector Identification",
+                    "Internal IAM telemetry logged rapid failed authentication attempts across consecutive executive accounts originating from a single internal subnet IP. Submit the attacking host address (192.168.12.130).",
+                    "IDENTITY_ACCESS",
+                    "192.168.12.130",
+                    100,
+                    "SIEM Log Aggregator",
+                    "auth_fail_stream.txt"
                 ));
-                System.out.println(">>> SEEDED QUEST CHALLENGES");
+
+                // Tier 2: Real Forensic Tool Artifact Investigations
+                challengeRepository.save(new QuestChallenge(
+                    "SSH Brute Force Forensic Extraction",
+                    "A public bastion server logged multiple unauthorized authentication events. Download the audit log and extract the source IP conducting the dictionary attack.",
+                    "HOST_FORENSICS",
+                    "203.0.113.88",
+                    150,
+                    "Linux Terminal (grep / awk)",
+                    "auth_audit.log"
+                ));
+
+                challengeRepository.save(new QuestChallenge(
+                    "Malicious Email Gateway Spoof Triage",
+                    "A phishing email bypassed the perimeter filter. Download the raw .eml file, inspect the received headers, and extract the real relay IP that failed the SPF authorization check.",
+                    "PHISHING_ANALYSIS",
+                    "198.51.100.99",
+                    150,
+                    "Email Client / Text Editor",
+                    "phishing_investigation.eml"
+                ));
+
+                challengeRepository.save(new QuestChallenge(
+                    "Encrypted DNS Tunneling Traffic Capture",
+                    "A network tap captured an anomalous outbound burst. Download the .pcap capture, filter the DNS traffic in Wireshark, and extract the spoofed sub-domain key prefixed before .cyberquest.",
+                    "NETWORK_TRAFFIC",
+                    "c2-key-992",
+                    250,
+                    "Wireshark / TShark",
+                    "dns_exfil_traffic.pcap"
+                ));
+                System.out.println(">>> SEEDED 5-MODULE DEFENSIVE QUEST TRACK (750 MAX XP)");
             }
         };
     }

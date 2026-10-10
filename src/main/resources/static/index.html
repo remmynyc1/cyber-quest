@@ -370,34 +370,39 @@
             </div>
         </div>
 
-    <!-- Active Anomaly Card with Live Bridge -->
-<div class="card" id="anomaly-card">
-    <div class="card-header">
-        <span class="card-title">Active Security Anomaly</span>
-        <span class="badge-live" id="anomaly-badge" style="background: rgba(239, 68, 68, 0.2); color: var(--red);">● ATTACK ACTIVE</span>
-    </div>
-    
-    <div class="threat-box" style="margin-top: 10px;">
-        <div style="color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 4px;">THREAT-084-INFILTRATION</div>
-        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin: 0;">
-            Synthetic anomaly detected in network logs. Physical-to-digital validation required to trigger pfSense mitigation.
-        </p>
-        <div class="hex-preview-box">
-            <div class="hex-swatch" id="anomaly-swatch"></div>
-            <div>
-                <div style="font-size: 10px; color: var(--text-muted);">REQUIRED COLOR KEY</div>
-                <div style="font-family: monospace; font-size: 14px; font-weight: 700; color: #E63946;" id="anomaly-hex">#E63946 (Crimson)</div>
-            </div>
-        </div>
-    </div>
+        <!-- Right Column: Security Anomaly & Manual Register -->
+        <div>
+            <!-- Active Anomaly Card with Live Bridge -->
+            <div class="card" id="anomaly-card">
+                <div class="card-header">
+                    <span class="card-title">Active Security Anomaly</span>
+                    <span class="badge-live" id="anomaly-badge" style="background: rgba(239, 68, 68, 0.2); color: var(--red);">● ATTACK ACTIVE</span>
+                </div>
+                <div class="threat-box" style="margin-top: 10px;">
+                    <div style="color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 4px;">THREAT-084-INFILTRATION</div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                        Synthetic anomaly detected in network logs. Physical-to-digital validation required to trigger pfSense mitigation.
+                    </p>
+                    <div class="hex-preview-box">
+                        <div class="hex-swatch"></div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-muted);">REQUIRED COLOR KEY</div>
+                            <div style="font-family: monospace; font-size: 14px; font-weight: 700; color: #E63946;">#E63946 (Crimson)</div>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Manual Optical Injection / Companion Override -->
-    <div style="display: flex; gap: 8px; margin-top: 12px;">
-        <input type="text" id="opticalHexInput" placeholder="#E63946" style="flex: 1; text-transform: uppercase;">
-        <button class="btn-primary" onclick="submitOpticalKey()">Mitigate Anomaly</button>
-    </div>
-    <div id="anomaly-status-msg" style="font-size: 12px; margin-top: 8px; font-weight: 600;"></div>
-</div>
+                <!-- Optical Companion Verification Control -->
+                <div style="margin-top: 12px;">
+                    <label>Optical Capture Input (Hex Key)</label>
+                    <div style="display: flex; gap: 8px; margin-top: 4px;">
+                        <input type="text" id="opticalHexInput" placeholder="#E63946" style="flex: 1; text-transform: uppercase;">
+                        <button class="btn-primary" onclick="submitOpticalKey()">Mitigate</button>
+                    </div>
+                    <div id="anomaly-status-msg" style="font-size: 12px; margin-top: 8px; font-weight: 600;"></div>
+                </div>
+            </div>
+
             <!-- Manual Registration Form -->
             <div class="card">
                 <span class="card-title">Enroll Agent (Manual)</span>
@@ -527,6 +532,65 @@
             }
         }
 
+        async function checkAnomalyStatus() {
+            try {
+                const res = await fetch('/api/threats/status');
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                const badge = document.getElementById('anomaly-badge');
+                const input = document.getElementById('opticalHexInput');
+                
+                if (!data.active) {
+                    badge.innerText = '✔ NEUTRALIZED';
+                    badge.style.background = 'rgba(74, 222, 128, 0.2)';
+                    badge.style.color = 'var(--green)';
+                    if (input) input.disabled = true;
+                } else {
+                    badge.innerText = '● ATTACK ACTIVE';
+                    badge.style.background = 'rgba(239, 68, 68, 0.2)';
+                    badge.style.color = 'var(--red)';
+                    if (input) input.disabled = false;
+                }
+            } catch (e) {
+                console.error('Failed to load anomaly status:', e);
+            }
+        }
+
+        async function submitOpticalKey() {
+            const input = document.getElementById('opticalHexInput');
+            const msg = document.getElementById('anomaly-status-msg');
+            const hex = input.value.trim();
+
+            if (!hex) {
+                msg.innerText = 'Input color hex value.';
+                msg.style.color = 'var(--red)';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/threats/verify-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hexCode: hex })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.status === 'SUCCESS') {
+                    msg.innerText = '✔ ' + data.message;
+                    msg.style.color = 'var(--green)';
+                    checkAnomalyStatus();
+                    loadIncidentLogs();
+                } else {
+                    msg.innerText = '✖ ' + (data.message || 'Verification rejected');
+                    msg.style.color = 'var(--red)';
+                }
+            } catch (e) {
+                msg.innerText = 'Error connecting to threat bridge.';
+                msg.style.color = 'var(--red)';
+            }
+        }
+
         async function createUser(event) {
             event.preventDefault();
             const newUser = {
@@ -561,73 +625,13 @@
             loadUsers();
             loadIncidentLogs();
             loadLeaderboard();
+            checkAnomalyStatus();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             refreshAll();
             setInterval(refreshAll, 5000);
         });
-        async function checkAnomalyStatus() {
-    try {
-        const res = await fetch('/api/threats/status');
-        if (!res.ok) return;
-        const data = await res.json();
-        
-        const badge = document.getElementById('anomaly-badge');
-        const card = document.getElementById('anomaly-card');
-        
-        if (!data.active) {
-            badge.innerText = '✔ NEUTRALIZED';
-            badge.style.background = 'rgba(74, 222, 128, 0.2)';
-            badge.style.color = 'var(--green)';
-            document.getElementById('opticalHexInput').disabled = true;
-        } else {
-            badge.innerText = '● ATTACK ACTIVE';
-            badge.style.background = 'rgba(239, 68, 68, 0.2)';
-            badge.style.color = 'var(--red)';
-            document.getElementById('opticalHexInput').disabled = false;
-        }
-    } catch (e) {
-        console.error('Failed to load anomaly status:', e);
-    }
-}
-
-async function submitOpticalKey() {
-    const input = document.getElementById('opticalHexInput');
-    const msg = document.getElementById('anomaly-status-msg');
-    const hex = input.value.trim();
-
-    if (!hex) {
-        msg.innerText = 'Input color hex value.';
-        msg.style.color = 'var(--red)';
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/threats/verify-key', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ hexCode: hex })
-        });
-        const data = await res.json();
-
-        if (res.ok && data.status === 'SUCCESS') {
-            msg.innerText = '✔ ' + data.message;
-            msg.style.color = 'var(--green)';
-            checkAnomalyStatus();
-            loadIncidentLogs();
-        } else {
-            msg.innerText = '✖ ' + (data.message || 'Verification rejected');
-            msg.style.color = 'var(--red)';
-        }
-    } catch (e) {
-        msg.innerText = 'Error connecting to threat bridge.';
-        msg.style.color = 'var(--red)';
-    }
-}
-
-// Include in initial refresh loop
-setInterval(checkAnomalyStatus, 5000);
     </script>
 </body>
 </html>

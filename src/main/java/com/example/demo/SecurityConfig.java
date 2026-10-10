@@ -27,12 +27,12 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-    .requestMatchers("/login.html", "/login", "/api/quest/artifacts/**", "/api/threats/**").permitAll()
-    .requestMatchers("/index.html", "/api/users/**", "/api/dashboard/**").hasRole("MANAGER")
-    .requestMatchers("/employee.html", "/api/quest/**").hasAnyRole("EMPLOYEE", "MANAGER")
-    .anyRequest().authenticated()
-)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/login.html", "/login", "/api/quest/artifacts/**", "/api/threats/**").permitAll()
+                .requestMatchers("/index.html", "/api/users/**", "/api/dashboard/**").hasRole("MANAGER")
+                .requestMatchers("/employee.html", "/api/quest/**").hasAnyRole("EMPLOYEE", "MANAGER")
+                .anyRequest().authenticated()
+            )
             .formLogin(form -> form
                 .loginPage("/login.html")
                 .loginProcessingUrl("/login")

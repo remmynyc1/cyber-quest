@@ -272,7 +272,7 @@
         </div>
         <div class="header-actions">
             <button class="btn-primary" onclick="refreshAll()">↻ Refresh Telemetry</button>
-            <a href="/logout" class="btn-logout">Terminate Session</a>
+            <button class="btn-primary" onclick="location.href='/training.html'">Training &amp; Phishing Simulations</button>
         </div>
     </header>
 
@@ -431,6 +431,7 @@
     </div>
 
     <!-- Telemetry Scripts -->
+    <script src="/common.js"></script>
     <script>
         async function loadUsers() {
             try {
@@ -444,16 +445,17 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td style="color: var(--text-muted); font-family: monospace;">#${user.id}</td>
-                        <td style="font-weight: 600;">${user.fullName || 'Unnamed'}</td>
-                        <td style="color: var(--text-muted);">${user.email}</td>
-                        <td><span class="role-pill">${user.role || 'ROLE_USER'}</span></td>
+                        <td style="font-weight: 600;">${esc(user.fullName || 'Unnamed')}</td>
+                        <td style="color: var(--text-muted);">${esc(user.email)}</td>
+                        <td><span class="role-pill">${esc(user.role || 'ROLE_USER')}</span></td>
                         <td>
                             <span class="${user.enrolledInStarterQuest ? 'quest-active' : 'quest-inactive'}">
                                 ${user.enrolledInStarterQuest ? '● Enrolled' : '○ Pending'}
                             </span>
                         </td>
                         <td>
-                            <button class="btn-delete" onclick="deleteUser(${user.id})">Remove</button>
+                            <button class="btn-neutralize" onclick="resetPassword(${Number(user.id)})">Reset password</button>
+                            <button class="btn-delete" onclick="deleteUser(${Number(user.id)})">Remove</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -481,9 +483,9 @@
                     return `
                         <tr>
                             <td style="font-family: monospace; color: var(--text-muted);">#${log.id}</td>
-                            <td><strong>${log.eventType}</strong></td>
-                            <td style="color: ${sevColor}; font-weight: 600;">${log.severity}</td>
-                            <td style="color: var(--text-muted);">${log.targetEmail}</td>
+                            <td><strong>${esc(log.eventType)}</strong></td>
+                            <td style="color: ${sevColor}; font-weight: 600;">${esc(log.severity)}</td>
+                            <td style="color: var(--text-muted);">${esc(log.targetEmail)}</td>
                             <td>${log.resolved ? '<span class="status-green">RESOLVED</span>' : '<span class="status-red">ACTIVE</span>'}</td>
                             <td>
                                 ${log.resolved ? '—' : `<button class="btn-neutralize" onclick="resolveThreat(${log.id})">Neutralize</button>`}
@@ -512,7 +514,7 @@
 
         async function loadLeaderboard() {
             try {
-                const res = await fetch('/api/quest/leaderboard');
+                const res = await fetch('/api/dashboard/leaderboard');
                 if (!res.ok) return;
                 const leaderboard = await res.json();
                 const tbody = document.getElementById('leaderboard-body');
@@ -521,8 +523,8 @@
                 tbody.innerHTML = leaderboard.map((op, idx) => `
                     <tr>
                         <td style="font-weight: 700; color: var(--cyan);">#${idx + 1}</td>
-                        <td><strong>${op.fullName}</strong></td>
-                        <td style="color: var(--text-muted);">${op.email}</td>
+                        <td><strong>${esc(op.fullName)}</strong></td>
+                        <td style="color: var(--text-muted);">${esc(op.email)}</td>
                         <td>${op.questsCompleted}</td>
                         <td style="font-weight: 700; color: var(--green);">${op.totalXp} XP</td>
                     </tr>
@@ -596,9 +598,7 @@
             const newUser = {
                 fullName: document.getElementById('formName').value,
                 email: document.getElementById('formEmail').value,
-                role: document.getElementById('formRole').value,
-                enrolledInStarterQuest: true,
-                passwordHash: "$2a$10$DefaultHashedPasswordPlaceHolderStringForMockPurposes"
+                role: document.getElementById('formRole').value
             };
 
             const response = await fetch('/api/users', {
@@ -608,10 +608,22 @@
             });
 
             if (response.ok) {
+                const created = await response.json();
                 document.getElementById('addUserForm').reset();
                 loadUsers();
+                alert('Account created for ' + created.email + '.\n\nOne-time temporary password (shown only once):\n' + created.tempPassword);
             } else {
-                alert('Error creating user.');
+                const err = await response.json().catch(() => ({}));
+                alert(err.message || 'Error creating user.');
+            }
+        }
+
+        async function resetPassword(id) {
+            if (!confirm('Issue a new temporary password for this user?')) return;
+            const response = await fetch(`/api/users/${id}/reset-password`, { method: 'POST' });
+            if (response.ok) {
+                const r = await response.json();
+                alert('New temporary password for ' + r.email + ' (shown only once):\n' + r.tempPassword);
             }
         }
 

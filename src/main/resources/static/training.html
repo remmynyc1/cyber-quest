@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Quest // Training Management</title>
+    <style>
+        :root { --bg-dark:#070b12; --panel-bg:#0f172a; --border:#1e293b; --text-main:#f8fafc; --text-muted:#94a3b8;
+                --cyan:#38bdf8; --green:#4ade80; --red:#f87171; --amber:#fbbf24; }
+        * { box-sizing: border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg-dark); color:var(--text-main); margin:0; padding:24px; line-height:1.5; }
+        :focus-visible { outline:2px solid var(--cyan); outline-offset:2px; }
+        header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--border); padding-bottom:16px; margin-bottom:20px; }
+        h1 { margin:0; font-size:20px; color:var(--cyan); } h2 { font-size:16px; margin:0 0 4px; }
+        a.nav { color:var(--cyan); text-decoration:none; font-size:13px; border:1px solid var(--border); padding:6px 12px; border-radius:6px; margin-left:8px; }
+        .card { background:var(--panel-bg); border:1px solid var(--border); border-radius:8px; padding:18px; margin-bottom:18px; overflow-x:auto; }
+        .muted { color:var(--text-muted); font-size:13px; margin:0 0 12px; max-width:70ch; }
+        .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+        label { display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px; }
+        select, input { background:#080c14; border:1px solid var(--border); color:var(--text-main); border-radius:6px; padding:9px 12px; font-size:13px; min-width:220px; }
+        button { background:var(--cyan); color:#04121c; border:none; border-radius:6px; padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th { text-align:left; color:var(--text-muted); font-weight:600; padding:8px; border-bottom:1px solid var(--border); }
+        td { padding:8px; border-bottom:1px solid var(--border); }
+        .bar { background:#0b1220; border:1px solid var(--border); border-radius:4px; height:10px; width:120px; display:inline-block; vertical-align:middle; overflow:hidden; }
+        .bar > span { display:block; height:100%; }
+        .num { font-variant-numeric: tabular-nums; }
+        .bad { color:var(--red); } .ok { color:var(--green); }
+        #msg { font-size:13px; margin-left:8px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div><h1>Training &amp; Phishing Simulations</h1><span class="muted" style="margin:0;">See who has completed training and how your team handles simulated phishing.</span></div>
+        <div><a class="nav" href="/index.html">SOC dashboard</a><a class="nav" href="/logout">Sign out</a></div>
+    </header>
+
+    <section class="card">
+        <h2>Launch a phishing simulation</h2>
+        <p class="muted">Sends a practice email to every employee and analyst. It appears in their Practice inbox inside Cyber Quest. Nothing leaves the app, and clicking the link only shows a teaching message.</p>
+        <div class="row">
+            <div><label for="tpl">Email template</label><select id="tpl"></select></div>
+            <div><label for="cname">Campaign name (optional)</label><input id="cname" maxlength="80" placeholder="e.g. October password-expiry test"></div>
+            <button id="launchBtn">Send simulation</button><span id="msg" role="status"></span>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Simulation results</h2>
+        <p class="muted">A high report rate is the goal. Click rate shows who needs more practice.</p>
+        <table><thead><tr><th>Campaign</th><th>Sent</th><th>Clicked the link</th><th>Reported it</th><th>Launched</th></tr></thead>
+        <tbody id="campRows"><tr><td colspan="5" class="muted">No simulations yet.</td></tr></tbody></table>
+    </section>
+
+    <section class="card">
+        <h2>Training completion by module</h2>
+        <p class="muted">Completed means the learner finished the module at least once. Average score uses each person's best attempt.</p>
+        <table><thead><tr><th>Module</th><th>Completed</th><th>Average score</th></tr></thead><tbody id="modRows"></tbody></table>
+    </section>
+
+    <section class="card">
+        <h2>Learner progress</h2>
+        <table><thead><tr><th>Name</th><th>Modules done</th><th>Average score</th><th>XP</th><th>Phish clicked</th><th>Phish reported</th></tr></thead><tbody id="peopleRows"></tbody></table>
+    </section>
+
+    <script src="/common.js"></script>
+    <script>
+        const $ = id => document.getElementById(id);
+        const bar = (pct, color) => `<span class="bar" aria-hidden="true"><span style="width:${Math.min(100, Number(pct))}%;background:${color}"></span></span>`;
+
+        async function loadTemplates() {
+            const r = await fetch('/api/training/templates'); if (!r.ok) return;
+            $('tpl').innerHTML = (await r.json()).map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+        }
+
+        async function loadCampaigns() {
+            const r = await fetch('/api/training/campaigns'); if (!r.ok) return;
+            const rows = await r.json();
+            if (!rows.length) return;
+            $('campRows').innerHTML = rows.map(c => `<tr>
+                <td><strong>${esc(c.name)}</strong></td><td class="num">${Number(c.targeted)}</td>
+                <td class="num ${c.clickRate > 20 ? 'bad' : ''}">${Number(c.clicked)} (${Number(c.clickRate)}%) ${bar(c.clickRate, 'var(--red)')}</td>
+                <td class="num ok">${Number(c.reported)} (${Number(c.reportRate)}%) ${bar(c.reportRate, 'var(--green)')}</td>
+                <td class="muted" style="margin:0">${esc(new Date(c.launchedAt).toLocaleString())}</td></tr>`).join('');
+        }
+
+        async function loadSummary() {
+            const r = await fetch('/api/training/summary'); if (!r.ok) return;
+            const d = await r.json();
+            $('modRows').innerHTML = d.modules.map(m => {
+                const pct = m.learners ? Math.round(m.completed * 100 / m.learners) : 0;
+                return `<tr><td>${esc(m.title)}</td><td class="num">${Number(m.completed)} / ${Number(m.learners)} ${bar(pct, 'var(--cyan)')}</td>
+                    <td class="num">${m.completed ? Number(m.avgPercent) + '%' : '-'}</td></tr>`;
+            }).join('');
+            $('peopleRows').innerHTML = d.learners.length ? d.learners.map(p => `<tr>
+                <td>${esc(p.name)}<br><span class="muted" style="margin:0">${esc(p.email)}</span></td>
+                <td class="num">${Number(p.completed)} / ${Number(p.total)}</td>
+                <td class="num">${p.completed ? Number(p.avgPercent) + '%' : '-'}</td>
+                <td class="num">${Number(p.totalXp)}</td>
+                <td class="num ${p.phishClicked ? 'bad' : ''}">${Number(p.phishClicked)}</td>
+                <td class="num ok">${Number(p.phishReported)}</td></tr>`).join('')
+                : '<tr><td colspan="6" class="muted">No employees enrolled yet.</td></tr>';
+        }
+
+        $('launchBtn').onclick = async () => {
+            const r = await fetch('/api/training/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ templateId: $('tpl').value, name: $('cname').value }) });
+            const d = await r.json().catch(() => ({}));
+            $('msg').textContent = r.ok ? 'Sent to ' + d.targeted + ' people.' : (d.message || 'Could not send.');
+            $('msg').className = r.ok ? 'ok' : 'bad';
+            if (r.ok) { $('cname').value = ''; loadCampaigns(); }
+        };
+
+        function refresh() { loadCampaigns(); loadSummary(); }
+        document.addEventListener('DOMContentLoaded', () => { loadTemplates(); refresh(); setInterval(refresh, 15000); });
+    </script>
+</body>
+</html>

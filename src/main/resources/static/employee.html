@@ -3,260 +3,413 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Quest // Operative Defense Terminal</title>
+    <title>Cyber Quest // Security Training</title>
     <style>
         :root {
-            --bg-dark: #070b12;
-            --panel-bg: #0f172a;
-            --border: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #64748b;
-            --cyan: #38bdf8;
-            --green: #4ade80;
-            --red: #ef4444;
+            --bg-dark: #070b12; --panel-bg: #0f172a; --panel-2: #131d33; --border: #1e293b;
+            --text-main: #f8fafc; --text-muted: #94a3b8; --cyan: #38bdf8; --green: #4ade80;
+            --red: #f87171; --amber: #fbbf24;
         }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-dark); color: var(--text-main);
+               margin: 0; padding: 24px; line-height: 1.5; }
+        a { color: var(--cyan); }
+        :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+        header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+                 border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 20px; color: var(--cyan); }
+        h2 { margin: 0 0 8px; font-size: 18px; }
+        .muted { color: var(--text-muted); font-size: 13px; }
+        .logout { color: var(--red); font-size: 13px; text-decoration: none; font-weight: 700;
+                  border: 1px solid rgba(248,113,113,.4); padding: 6px 12px; border-radius: 6px; }
 
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0;
-            padding: 24px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 16px;
-            margin-bottom: 24px;
-        }
-
-        h1 { margin: 0; font-size: 18px; color: var(--cyan); }
-
-        .stats-bar {
-            display: flex;
-            gap: 20px;
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            align-items: center;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .stat-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); }
+        .stats-bar { display: flex; gap: 28px; flex-wrap: wrap; background: var(--panel-bg); border: 1px solid var(--border);
+                     padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; }
+        .stat-label { font-size: 12px; color: var(--text-muted); display: block; }
         .stat-val { font-size: 20px; font-weight: 700; color: var(--green); }
 
-        .quest-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
+        .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+        .tab { background: none; border: 1px solid transparent; border-bottom: none; color: var(--text-muted);
+               padding: 10px 16px; font-size: 14px; cursor: pointer; border-radius: 8px 8px 0 0; }
+        .tab[aria-selected="true"] { color: var(--text-main); background: var(--panel-bg); border-color: var(--border); font-weight: 600; }
+        .badge { background: var(--red); color: #1a0000; border-radius: 10px; font-size: 11px; font-weight: 700; padding: 1px 7px; margin-left: 6px; }
 
-        .quest-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
+        .intro { max-width: 70ch; margin: 0 0 16px; color: #cbd5e1; font-size: 14px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+        .card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .card.done { border-color: rgba(74,222,128,.45); }
+        .card h3 { margin: 0; font-size: 15px; }
+        .card p { margin: 0; font-size: 13px; color: #cbd5e1; flex: 1; }
+        .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+        .pill { background: rgba(56,189,248,.12); color: var(--cyan); border-radius: 4px; padding: 2px 8px; font-size: 12px; }
+        .xp { color: var(--green); font-weight: 700; }
+        button.primary, .btn { background: var(--cyan); color: #04121c; border: none; border-radius: 6px; padding: 9px 16px;
+                               font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+        button.ghost { background: none; color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; padding: 9px 16px; font-size: 13px; cursor: pointer; }
+        button:disabled { opacity: .5; cursor: not-allowed; }
 
-        .tool-badge {
-            font-size: 11px;
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            padding: 3px 8px;
-            border-radius: 4px;
-            color: var(--cyan);
-            margin-bottom: 12px;
-            display: inline-block;
-        }
+        #player { display: none; max-width: 820px; }
+        .scene { font-size: 16px; background: var(--panel-bg); border: 1px solid var(--border); border-left: 3px solid var(--cyan);
+                 padding: 16px 18px; border-radius: 6px; margin: 12px 0; max-width: 70ch; }
+        .choices { display: grid; gap: 10px; }
+        .choice { text-align: left; background: var(--panel-2); color: var(--text-main); border: 1px solid var(--border);
+                  border-radius: 8px; padding: 12px 14px; font-size: 14px; cursor: pointer; }
+        .choice:hover:not(:disabled) { border-color: var(--cyan); }
+        .feedback { margin-top: 14px; padding: 14px 16px; border-radius: 8px; border: 1px solid; max-width: 70ch; }
+        .feedback.good { border-color: rgba(74,222,128,.5); background: rgba(74,222,128,.08); }
+        .feedback.bad { border-color: rgba(248,113,113,.5); background: rgba(248,113,113,.08); }
+        .feedback strong { display: block; margin-bottom: 4px; }
+        .result-big { font-size: 34px; font-weight: 700; color: var(--green); margin: 4px 0; }
+        ul.take { padding-left: 20px; max-width: 70ch; }
+        ul.take li { margin-bottom: 6px; }
 
-        .btn-artifact {
-            display: inline-block;
-            background: rgba(56, 189, 248, 0.12);
-            color: var(--cyan);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            text-decoration: none;
-            padding: 7px 14px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
+        .email { background: #fff; color: #1e293b; border-radius: 8px; padding: 18px 20px; max-width: 70ch; margin: 12px 0; }
+        .e-row { display: flex; gap: 10px; padding: 4px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px; flex-wrap: wrap; }
+        .e-k { color: #64748b; width: 62px; flex: none; }
+        .e-body { padding-top: 12px; font-size: 14px; }
+        .e-body p { margin: 0 0 10px; }
+        .seg { font: inherit; color: inherit; background: none; border: none; border-bottom: 2px dashed #94a3b8; padding: 0 1px; cursor: pointer; text-align: left; }
+        .seg:hover { background: #e0f2fe; }
+        .seg.on { background: #fde68a; border-bottom: 2px solid #b45309; }
+        .seg.hit { background: #bbf7d0; border-bottom-color: #15803d; }
+        .seg.miss { background: #fecaca; border-bottom-color: #b91c1c; }
+        .seg.false { background: #fed7aa; border-bottom-color: #c2410c; }
+        .actions { display: grid; gap: 8px; margin: 14px 0; }
+        .actions label { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
+        .review { list-style: none; padding: 0; max-width: 70ch; }
+        .review li { padding: 8px 10px; border-left: 3px solid var(--border); margin-bottom: 8px; background: var(--panel-bg); font-size: 13px; }
+        .review li.hit { border-color: var(--green); } .review li.miss { border-color: var(--red); } .review li.false { border-color: var(--amber); }
 
-        .btn-artifact:hover {
-            background: rgba(56, 189, 248, 0.25);
-        }
+        .inbox { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 16px; }
+        @media (max-width: 760px) { .inbox { grid-template-columns: 1fr; } body { padding: 14px; } }
+        .mail-item { width: 100%; text-align: left; background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 8px;
+                     padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font-size: 13px; }
+        .mail-item[aria-current="true"] { border-color: var(--cyan); }
+        .mail-item .subj { font-weight: 600; display: block; }
+        .mail-item.new .subj::before { content: "\25CF "; color: var(--cyan); }
+        .status { font-size: 11px; margin-left: 6px; }
+        .status.reported { color: var(--green); } .status.clicked { color: var(--amber); }
+        .reading { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 8px; padding: 18px; }
+        .reading pre { white-space: pre-wrap; font-family: inherit; margin: 12px 0; font-size: 14px; }
+        .fake-link { color: #7dd3fc; text-decoration: underline; cursor: pointer; background: none; border: none; font: inherit; padding: 0; }
+        .tip { font-size: 12px; color: var(--text-muted); }
+        .empty { color: var(--text-muted); padding: 24px 0; max-width: 60ch; }
 
-        .input-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        input {
-            flex: 1;
-            background: #080c14;
-            border: 1px solid var(--border);
-            padding: 9px 12px;
-            border-radius: 6px;
-            color: white;
-            font-size: 13px;
-        }
-
-        button {
-            background: var(--cyan);
-            color: #070b12;
-            border: none;
-            padding: 9px 18px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        button:disabled {
-            background: #334155;
-            color: #94a3b8;
-            cursor: not-allowed;
-        }
-
-        .result-msg { font-size: 12px; font-weight: 600; margin-left: 8px; }
+        .quest-card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+        .quest-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .tool-badge { display: inline-block; font-size: 12px; background: rgba(251,191,36,.12); color: var(--amber); border-radius: 4px; padding: 2px 8px; margin: 8px 0; }
+        .input-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+        .input-row input { flex: 1; min-width: 200px; background: #080c14; border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 9px 12px; font-size: 13px; }
+        .leader { margin-top: 24px; max-width: 420px; }
+        .leader ol { padding-left: 20px; margin: 6px 0; font-size: 14px; }
     </style>
 </head>
 <body>
-
     <header>
         <div>
-            <h1>CYBER QUEST // DEFENSIVE OPERATIVE TERMINAL</h1>
-            <span style="font-size: 12px; color: var(--text-muted);" id="userEmail">Loading profile...</span>
+            <h1>Cyber Quest: Security Training</h1>
+            <span class="muted" id="userEmail">Loading your profile...</span>
         </div>
-        <div>
-            <a href="/logout" style="color: var(--red); font-size: 12px; text-decoration: none; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 12px; border-radius: 6px;">Terminate Session</a>
-        </div>
+        <a href="/logout" class="logout">Sign out</a>
     </header>
 
-    <div class="stats-bar">
-        <div class="stat-item">
-            <span class="stat-label">Operative Call-Sign</span>
-            <span class="stat-val" style="color: var(--cyan);" id="userName">-</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">Total Earned XP</span>
-            <span class="stat-val" id="totalXp">0 XP</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">Quests Completed</span>
-            <span class="stat-val" style="color: white;" id="completedCount">0</span>
-        </div>
+    <div class="stats-bar" aria-live="polite">
+        <div><span class="stat-label">Name</span><span class="stat-val" style="color: var(--cyan);" id="userName">-</span></div>
+        <div><span class="stat-label">Total XP</span><span class="stat-val" id="totalXp">0 XP</span></div>
+        <div><span class="stat-label">Training completed</span><span class="stat-val" style="color: #fff;" id="completedCount">0</span></div>
     </div>
 
-    <div id="challenge-list">
-        <div style="text-align: center; color: var(--text-muted);">Loading defensive quest modules...</div>
-    </div>
+    <main id="home">
+        <div class="tabs" role="tablist" aria-label="Training sections">
+            <button class="tab" role="tab" id="tab-missions" aria-selected="true" data-tab="missions">Missions</button>
+            <button class="tab" role="tab" id="tab-inspect" aria-selected="false" data-tab="inspect">Spot the red flags</button>
+            <button class="tab" role="tab" id="tab-inbox" aria-selected="false" data-tab="inbox">Practice inbox <span class="badge" id="inboxBadge" hidden>0</span></button>
+            <button class="tab" role="tab" id="tab-labs" aria-selected="false" data-tab="labs">Analyst labs</button>
+        </div>
 
+        <section id="panel-missions" role="tabpanel" aria-labelledby="tab-missions">
+            <p class="intro">Short real-world situations. Choose what you would do and find out what happens. No technical knowledge needed, and you can retry any mission to improve your score.</p>
+            <div class="grid" id="missions-list"></div>
+            <div class="leader card" id="leaderCard" hidden>
+                <h3>Top learners</h3>
+                <ol id="leaderList"></ol>
+            </div>
+        </section>
+
+        <section id="panel-inspect" role="tabpanel" aria-labelledby="tab-inspect" hidden>
+            <p class="intro">Read each email like an investigator. Tap anything that looks suspicious, then decide what you would do. Some emails are legitimate, so not everything is a trap.</p>
+            <div class="grid" id="inspect-list"></div>
+        </section>
+
+        <section id="panel-inbox" role="tabpanel" aria-labelledby="tab-inbox" hidden>
+            <p class="intro">Your manager may send practice phishing emails here. Treat them as if they were real: open them, look closely, and use <strong>Report phishing</strong> if something seems wrong.</p>
+            <div class="inbox">
+                <div id="mailList"></div>
+                <div id="mailView"><div class="empty">Select a message to read it.</div></div>
+            </div>
+        </section>
+
+        <section id="panel-labs" role="tabpanel" aria-labelledby="tab-labs" hidden>
+            <p class="intro">Optional advanced track for technical staff. These labs use real log files, email headers and packet captures.</p>
+            <div id="challenge-list"></div>
+        </section>
+    </main>
+
+    <section id="player" aria-live="polite"></section>
+
+    <script src="/common.js"></script>
     <script>
-        let completedIds = [];
+        const $ = id => document.getElementById(id);
+        let catalog = [];
+        let state = {};
 
+        async function postJson(url, body) {
+            const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+            const data = await r.json().catch(() => ({}));
+            return { ok: r.ok, status: r.status, data };
+        }
+
+        // ---------- navigation ----------
+        function showTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === name));
+            document.querySelectorAll('[role=tabpanel]').forEach(p => p.hidden = p.id !== 'panel-' + name);
+            if (name === 'inbox') loadInbox();
+            if (name === 'labs') loadLabs();
+        }
+        document.querySelector('.tabs').addEventListener('click', e => {
+            const t = e.target.closest('.tab'); if (t) showTab(t.dataset.tab);
+        });
+        function openPlayer() { $('home').style.display = 'none'; $('player').style.display = 'block'; window.scrollTo(0, 0); }
+        function closePlayer() { $('player').style.display = 'none'; $('home').style.display = 'block'; refresh(); }
+
+        // ---------- profile + catalog ----------
         async function loadProfile() {
-            try {
-                const res = await fetch('/api/quest/my-stats');
-                if (!res.ok) return;
-                const data = await res.json();
-                document.getElementById('userName').innerText = data.fullName;
-                document.getElementById('userEmail').innerText = data.email;
-                document.getElementById('totalXp').innerText = data.totalXp + ' XP';
-                completedIds = data.completedChallenges || [];
-                document.getElementById('completedCount').innerText = completedIds.length + ' / 3';
-            } catch (err) {
-                console.error(err);
-            }
+            const r = await fetch('/api/quest/my-stats'); if (!r.ok) return;
+            const d = await r.json();
+            $('userName').textContent = d.fullName;
+            $('userEmail').textContent = d.email;
+            $('totalXp').textContent = d.totalXp + ' XP';
         }
 
-        async function loadChallenges() {
-            try {
-                await loadProfile();
-                const res = await fetch('/api/quest/challenges');
-                const challenges = await res.json();
-                const container = document.getElementById('challenge-list');
-
-                container.innerHTML = challenges.map(ch => {
-                    const isSolved = completedIds.includes(ch.id);
-                    return `
-                        <div class="quest-card" style="${isSolved ? 'border-color: rgba(74, 222, 128, 0.4);' : ''}">
-                            <div class="quest-header">
-                                <h3 style="margin: 0; color: ${isSolved ? 'var(--green)' : 'var(--cyan)'}; font-size: 15px;">
-                                    ${isSolved ? '✔ ' : ''}${ch.title}
-                                </h3>
-                                <span style="background: rgba(74, 222, 128, 0.15); color: var(--green); padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">
-                                    +${ch.pointValue} XP
-                                </span>
-                            </div>
-
-                            <span class="tool-badge">Required Tool: ${ch.requiredTool || 'Terminal / CLI'}</span>
-                            <p style="color: #cbd5e1; font-size: 13px; line-height: 1.5; margin: 0 0 14px 0;">${ch.scenario}</p>
-
-                            <a href="/api/quest/artifacts/${ch.id}" class="btn-artifact">
-                                ⬇ Download Forensic Artifact (${ch.artifactName})
-                            </a>
-
-                            <div class="input-row">
-                                <input type="text" id="flag-${ch.id}" placeholder="${isSolved ? 'Artifact verified and mitigated' : 'Enter extracted IOC or flag'}" ${isSolved ? 'disabled' : ''}>
-                                <button onclick="submitFlag(${ch.id})" ${isSolved ? 'disabled' : ''}>
-                                    ${isSolved ? 'Mitigated' : 'Verify & Mitigate'}
-                                </button>
-                                <span id="result-${ch.id}" class="result-msg"></span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch (err) {
-                console.error('Challenge load error:', err);
-            }
+        async function loadCatalog() {
+            const r = await fetch('/api/sim/catalog'); if (!r.ok) return;
+            catalog = await r.json();
+            const done = catalog.filter(c => c.bestPercent >= 0).length;
+            $('completedCount').textContent = done + ' / ' + catalog.length;
+            $('missions-list').innerHTML = catalog.filter(c => c.kind === 'BRANCH').map(cardHtml).join('');
+            $('inspect-list').innerHTML = catalog.filter(c => c.kind === 'INSPECT').map(cardHtml).join('');
         }
 
-        async function submitFlag(id) {
-            const input = document.getElementById(`flag-${id}`);
-            const resultSpan = document.getElementById(`result-${id}`);
-            const answer = input ? input.value.trim() : '';
+        function cardHtml(c) {
+            const status = c.inProgress ? 'In progress' : c.bestPercent >= 0 ? 'Best score: ' + c.bestPercent + '%' : 'Not started';
+            const label = c.inProgress ? 'Resume' : c.bestPercent >= 0 ? 'Try again' : 'Start';
+            return `<article class="card ${c.bestPercent >= 0 ? 'done' : ''}">
+                <div class="meta"><span class="pill">${esc(c.category)}</span><span class="xp">up to ${Number(c.xpReward)} XP</span></div>
+                <h3>${c.bestPercent >= 0 ? '&#10003; ' : ''}${esc(c.title)}</h3>
+                <p>${esc(c.intro)}</p>
+                <div class="meta"><span>${esc(status)}</span>
+                <button class="primary" data-kind="${esc(c.kind)}" data-id="${esc(c.id)}">${label}</button></div>
+            </article>`;
+        }
+        document.addEventListener('click', e => {
+            const b = e.target.closest('button[data-kind]'); if (!b) return;
+            b.dataset.kind === 'BRANCH' ? startMission(b.dataset.id) : startInspect(b.dataset.id);
+        });
 
-            if (!answer) {
-                resultSpan.innerText = 'Enter an IOC before submitting.';
-                resultSpan.style.color = 'var(--red)';
-                return;
-            }
-
-            try {
-                const res = await fetch(`/api/quest/challenges/${id}/submit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ answer: answer })
-                });
-
-                const data = await res.json();
-
-                if (res.ok && data.status === 'SUCCESS') {
-                    resultSpan.innerText = `+${data.pointsEarned} XP Awarded! ${data.message}`;
-                    resultSpan.style.color = 'var(--green)';
-                    await loadChallenges();
-                } else {
-                    resultSpan.innerText = data.message || 'Submission rejected.';
-                    resultSpan.style.color = 'var(--red)';
-                }
-            } catch (err) {
-                resultSpan.innerText = 'Network communication failure.';
-                resultSpan.style.color = 'var(--red)';
-            }
+        async function loadLeaders() {
+            const r = await fetch('/api/quest/leaderboard'); if (!r.ok) return;
+            const rows = await r.json();
+            $('leaderCard').hidden = rows.length === 0;
+            $('leaderList').innerHTML = rows.slice(0, 5).map(x => `<li>${esc(x.displayName)}: ${Number(x.totalXp)} XP</li>`).join('');
         }
 
-        document.addEventListener('DOMContentLoaded', loadChallenges);
+        function refresh() { loadProfile(); loadCatalog(); loadLeaders(); refreshInboxBadge(); }
+
+        // ---------- branching missions ----------
+        async function startMission(id) {
+            const { ok, data } = await postJson('/api/sim/branch/' + encodeURIComponent(id) + '/start');
+            if (!ok) return alert('Could not start this mission. Please try again.');
+            state = { attemptId: data.attemptId, title: data.title, kind: 'BRANCH', id };
+            openPlayer(); renderNode(data.node);
+        }
+
+        function renderNode(node) {
+            state.node = node;
+            $('player').innerHTML = `<button class="ghost" id="exitBtn">Back to training</button>
+                <h2 style="margin-top:14px;">${esc(state.title)}</h2>
+                <p class="scene">${esc(node.text)}</p>
+                <div class="choices">${node.choices.map(c => `<button class="choice" data-choice="${esc(c.id)}">${esc(c.text)}</button>`).join('')}</div>
+                <div id="fb"></div>`;
+            $('exitBtn').onclick = closePlayer;
+            $('player').querySelectorAll('.choice').forEach(b => b.onclick = () => choose(b.dataset.choice));
+        }
+
+        async function choose(choiceId) {
+            document.querySelectorAll('.choice').forEach(b => b.disabled = true);
+            const { ok, data } = await postJson('/api/sim/branch/attempt/' + state.attemptId + '/choose', { choiceId });
+            if (!ok) { $('fb').innerHTML = `<div class="feedback bad">${esc(data.message || 'Something went wrong.')}</div>`; return; }
+            const chosen = state.node.choices.find(c => c.id === choiceId);
+            $('fb').innerHTML = `<div class="feedback ${data.safe ? 'good' : 'bad'}">
+                <strong>${data.safe ? 'Good choice' : 'Risky choice'}: ${esc(chosen ? chosen.text : '')}</strong>
+                ${esc(data.feedback)}
+                </div><p><button class="primary" id="nextBtn">${data.done ? 'See my results' : 'Continue'}</button></p>`;
+            $('nextBtn').focus();
+            $('nextBtn').onclick = () => data.done ? renderSummary(data) : renderNode(data.node);
+        }
+
+        function renderSummary(d) {
+            $('player').innerHTML = `<h2>${esc(state.title)}: results</h2>
+                <div class="result-big">${Number(d.percent)}%</div>
+                <p class="muted">${Number(d.score)} of ${Number(d.max)} points. ${d.xpAwarded > 0 ? '+' + Number(d.xpAwarded) + ' XP earned.' : 'No new XP (your best score still stands).'}</p>
+                <h3>What to remember</h3>
+                <ul class="take">${d.takeaways.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+                <p><button class="primary" id="againBtn">Try again</button> <button class="ghost" id="doneBtn">Back to training</button></p>`;
+            $('againBtn').onclick = () => startMission(state.id);
+            $('doneBtn').onclick = closePlayer;
+        }
+
+        // ---------- spot the red flags ----------
+        async function startInspect(id) {
+            const r = await fetch('/api/sim/inspector/' + encodeURIComponent(id)); if (!r.ok) return;
+            const e = await r.json();
+            state = { kind: 'INSPECT', id, email: e, picked: new Set() };
+            const seg = p => `<button type="button" class="seg" aria-pressed="false" data-part="${esc(p.id)}">${esc(p.text)}</button>`;
+            const from = e.parts.find(p => p.slot === 'from'), subj = e.parts.find(p => p.slot === 'subject');
+            openPlayer();
+            $('player').innerHTML = `<button class="ghost" id="exitBtn">Back to training</button>
+                <h2 style="margin-top:14px;">${esc(e.title)}</h2>
+                <p class="muted">${esc(e.intro)} Tap each part you find suspicious.</p>
+                <div class="email">
+                    <div class="e-row"><span class="e-k">From</span><span>${esc(e.fromName)} &lt;${seg(from)}&gt;</span></div>
+                    <div class="e-row"><span class="e-k">Subject</span><span>${seg(subj)}</span></div>
+                    <div class="e-body">${e.parts.filter(p => p.slot === 'body').map(p => `<p>${seg(p)}</p>`).join('')}</div>
+                </div>
+                <fieldset class="actions" style="border:none;padding:0;">
+                    <legend><strong>What would you do with this email?</strong></legend>
+                    <label><input type="radio" name="act" value="REPORT"> Report it as phishing</label>
+                    <label><input type="radio" name="act" value="DELETE"> Delete it</label>
+                    <label><input type="radio" name="act" value="TRUST"> Treat it as legitimate and follow it</label>
+                </fieldset>
+                <button class="primary" id="checkBtn">Check my answer</button>
+                <div id="fb"></div>`;
+            $('exitBtn').onclick = closePlayer;
+            $('player').querySelectorAll('.seg').forEach(b => b.onclick = () => {
+                const on = state.picked.has(b.dataset.part);
+                on ? state.picked.delete(b.dataset.part) : state.picked.add(b.dataset.part);
+                b.classList.toggle('on', !on); b.setAttribute('aria-pressed', String(!on));
+            });
+            $('checkBtn').onclick = submitInspect;
+        }
+
+        async function submitInspect() {
+            const act = document.querySelector('input[name=act]:checked');
+            if (!act) { $('fb').innerHTML = '<div class="feedback bad">Choose what you would do with the email first.</div>'; return; }
+            const { ok, data } = await postJson('/api/sim/inspector/' + encodeURIComponent(state.id) + '/submit', { flagged: [...state.picked], action: act.value });
+            if (!ok) { $('fb').innerHTML = `<div class="feedback bad">${esc(data.message || 'Something went wrong.')}</div>`; return; }
+            $('checkBtn').disabled = true;
+            $('player').querySelectorAll('.seg').forEach(b => {
+                const r = data.review.find(x => x.id === b.dataset.part); b.disabled = true; b.classList.remove('on');
+                const cls = r.flag && r.selected ? 'hit' : r.flag ? 'miss' : r.selected ? 'false' : ''; if (cls) b.classList.add(cls);
+            });
+            const labelOf = id => (state.email.parts.find(p => p.id === id) || {}).text || '';
+            const items = data.review.filter(r => r.flag || r.selected).map(r => {
+                const cls = r.flag && r.selected ? 'hit' : r.flag ? 'miss' : 'false';
+                const tag = cls === 'hit' ? 'You spotted this' : cls === 'miss' ? 'You missed this' : 'Not actually a red flag';
+                return `<li class="${cls}"><strong>${tag}:</strong> ${esc(labelOf(r.id))}<br>${esc(r.why)}</li>`;
+            }).join('');
+            $('fb').innerHTML = `<h3>Results</h3>
+                <div class="result-big">${Number(data.percent)}%</div>
+                <p class="muted">${data.isPhish ? 'This email was phishing.' : 'This email was legitimate.'} Best action: ${esc(data.bestAction)}. ${data.xpAwarded > 0 ? '+' + Number(data.xpAwarded) + ' XP earned.' : 'No new XP (your best score still stands).'}</p>
+                <ul class="review">${items}</ul>
+                <h3>What to remember</h3>
+                <ul class="take">${data.takeaways.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+                <p><button class="primary" id="againBtn">Try again</button> <button class="ghost" id="doneBtn">Back to training</button></p>`;
+            $('againBtn').onclick = () => startInspect(state.id);
+            $('doneBtn').onclick = closePlayer;
+        }
+
+        // ---------- practice inbox ----------
+        let mails = [];
+        async function fetchInbox() {
+            const r = await fetch('/api/sim/inbox'); if (!r.ok) return [];
+            mails = await r.json(); return mails;
+        }
+        async function refreshInboxBadge() {
+            await fetchInbox();
+            const n = mails.filter(m => m.status === 'NEW').length;
+            $('inboxBadge').textContent = n; $('inboxBadge').hidden = n === 0;
+        }
+        async function loadInbox() {
+            await fetchInbox(); refreshInboxBadge();
+            $('mailList').innerHTML = mails.length ? mails.map(m => `<button class="mail-item ${m.status === 'NEW' ? 'new' : ''}" data-mail="${Number(m.id)}">
+                <span class="subj">${esc(m.subject)}</span>${esc(m.fromName)}
+                ${m.status === 'REPORTED' ? '<span class="status reported">Reported</span>' : m.status === 'CLICKED' ? '<span class="status clicked">Link clicked</span>' : ''}</button>`).join('')
+                : '<div class="empty">Your practice inbox is empty. When your manager sends a practice email, it will appear here.</div>';
+        }
+        $('mailList').addEventListener('click', e => {
+            const b = e.target.closest('[data-mail]'); if (!b) return;
+            document.querySelectorAll('.mail-item').forEach(x => x.removeAttribute('aria-current'));
+            b.setAttribute('aria-current', 'true');
+            openMail(Number(b.dataset.mail));
+        });
+        function openMail(id) {
+            const m = mails.find(x => x.id === id); if (!m) return;
+            const locked = m.status === 'REPORTED';
+            $('mailView').innerHTML = `<div class="reading">
+                <div class="muted">From: ${esc(m.fromName)} &lt;${esc(m.fromAddr)}&gt;</div>
+                <h3 style="margin:6px 0;">${esc(m.subject)}</h3>
+                <pre>${esc(m.body)}</pre>
+                <p><button type="button" class="fake-link" id="mailLink" title="${esc(m.linkShown)}">${esc(m.linkText)}</button></p>
+                <p class="tip">Tip: hover over a link to see where it really goes. <button type="button" class="ghost" id="previewBtn" style="padding:3px 10px;">Preview link address</button> <span id="previewOut"></span></p>
+                <p><button class="primary" id="reportBtn" ${locked ? 'disabled' : ''}>${locked ? 'Reported' : 'Report phishing'}</button></p>
+                <div id="mailFb"></div></div>`;
+            $('previewBtn').onclick = () => { $('previewOut').textContent = m.linkShown; };
+            $('mailLink').onclick = async () => {
+                const { ok, data } = await postJson('/api/sim/inbox/' + id + '/click');
+                if (ok) showMailFb(data, false);
+                loadInbox();
+            };
+            $('reportBtn').onclick = async () => {
+                const { ok, data } = await postJson('/api/sim/inbox/' + id + '/report');
+                if (ok) { showMailFb(data, true); $('reportBtn').disabled = true; $('reportBtn').textContent = 'Reported'; loadProfile(); loadInbox(); }
+            };
+        }
+        function showMailFb(d, good) {
+            $('mailFb').innerHTML = `<div class="feedback ${good ? 'good' : 'bad'}"><strong>${good ? 'Reported' : 'You clicked the link'}</strong>${esc(d.message)}${d.xpAwarded ? ' +' + Number(d.xpAwarded) + ' XP.' : ''}
+                <br><br>Red flags in this email:<ul class="take">${d.redFlags.map(f => `<li>${esc(f)}</li>`).join('')}</ul></div>`;
+        }
+
+        // ---------- analyst labs ----------
+        async function loadLabs() {
+            const [pr, cr] = await Promise.all([fetch('/api/quest/my-stats'), fetch('/api/quest/challenges')]);
+            if (!pr.ok || !cr.ok) return;
+            const done = (await pr.json()).completedChallenges || [];
+            const list = await cr.json();
+            $('challenge-list').innerHTML = list.map(ch => {
+                const solved = done.includes(ch.id);
+                return `<div class="quest-card" style="${solved ? 'border-color: rgba(74,222,128,.45);' : ''}">
+                    <div class="quest-header"><h3 style="margin:0;color:${solved ? 'var(--green)' : 'var(--cyan)'};font-size:15px;">${solved ? '&#10003; ' : ''}${esc(ch.title)}</h3>
+                    <span class="xp">+${Number(ch.pointValue)} XP</span></div>
+                    <span class="tool-badge">Tool: ${esc(ch.requiredTool || 'Terminal / CLI')}</span>
+                    <p style="font-size:13px;color:#cbd5e1;margin:0 0 12px;">${esc(ch.scenario)}</p>
+                    <a class="btn" href="/api/quest/artifacts/${Number(ch.id)}">Download evidence (${esc(ch.artifactName)})</a>
+                    <div class="input-row">
+                        <input type="text" id="flag-${Number(ch.id)}" aria-label="Answer for ${esc(ch.title)}" placeholder="${solved ? 'Solved' : 'Enter what you found'}" ${solved ? 'disabled' : ''}>
+                        <button class="primary" data-lab="${Number(ch.id)}" ${solved ? 'disabled' : ''}>${solved ? 'Solved' : 'Submit'}</button>
+                        <span id="result-${Number(ch.id)}" class="muted" role="status"></span>
+                    </div></div>`;
+            }).join('');
+        }
+        $('challenge-list').addEventListener('click', async e => {
+            const b = e.target.closest('[data-lab]'); if (!b) return;
+            const id = b.dataset.lab, out = $('result-' + id), answer = $('flag-' + id).value.trim();
+            if (!answer) { out.textContent = 'Enter your answer first.'; out.style.color = 'var(--red)'; return; }
+            const { ok, data } = await postJson('/api/quest/challenges/' + id + '/submit', { answer });
+            if (ok && data.status === 'SUCCESS') { out.textContent = '+' + data.pointsEarned + ' XP. ' + data.message; out.style.color = 'var(--green)'; loadProfile(); loadLabs(); }
+            else { out.textContent = data.message || 'Not quite.'; out.style.color = 'var(--red)'; }
+        });
+
+        document.addEventListener('DOMContentLoaded', refresh);
     </script>
 </body>
 </html>

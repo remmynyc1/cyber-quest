@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import com.zaxxer.hikari.HikariDataSource;
 
 
 @Configuration 
@@ -23,11 +23,12 @@ public class HrDataSourceConfig {
     
     @Bean(name = "hrJdbcTemplate")
     public JdbcTemplate hrJdbcTemplate() {
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName(hrDriver);
-        dataSource.setUrl(hrUrl);
+        dataSource.setJdbcUrl(hrUrl);
         dataSource.setUsername(hrUsername);
         dataSource.setPassword(hrPassword);
+        dataSource.setMaximumPoolSize(3);
         return new JdbcTemplate(dataSource);
     }
 }

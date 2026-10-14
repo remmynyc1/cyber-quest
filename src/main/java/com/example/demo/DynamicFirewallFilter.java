@@ -27,16 +27,14 @@ public class DynamicFirewallFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String clientIp = httpRequest.getHeader("X-Forwarded-For");
-        if (clientIp == null || clientIp.isEmpty()) {
-            clientIp = httpRequest.getRemoteAddr();
-        }
+       HttpServletRequest httpRequest = (HttpServletRequest) request;
+       String clientIp = httpRequest.getRemoteAddr();
+        
 
         if (BLOCKED_IPS.contains(clientIp)) {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            httpResponse.getWriter().write("CYBER QUEST ACTIVE MITIGATION: IP blocked by pfSense integration rule.");
+            httpResponse.getWriter().write("CYBER QUEST ACTIVE MITIGATION: IP blocked by in-app training rule.");
             return;
         }
 

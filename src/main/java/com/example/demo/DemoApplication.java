@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,7 +19,12 @@ public class DemoApplication {
     @Bean
     public CommandLineRunner seedData(UserRepository userRepository, 
                                       PasswordEncoder passwordEncoder, 
-                                      QuestChallengeRepository challengeRepository) {
+                                      QuestChallengeRepository challengeRepository, 
+                                      @Value("${cq.seed.manager-password:manager26}")
+                                      String managerPw,
+                                      @Value("${cq.seed.employee-password:employee26}")
+                                      String employeePw) {
+
         return args -> {
             // Seed Manager Account
             if (!userRepository.existsByEmail("manager@cyberquest.internal")) {
@@ -26,7 +32,7 @@ public class DemoApplication {
                 manager.setFullName("Inspector Chief");
                 manager.setEmail("manager@cyberquest.internal");
                 manager.setRole("ROLE_MANAGER");
-                manager.setPasswordHash(passwordEncoder.encode("manager26"));
+                manager.setPasswordHash(passwordEncoder.encode("managerPw"));
                 manager.setEnrolledInStarterQuest(true);
                 manager.setTotalXp(0);
                 userRepository.save(manager);
@@ -38,13 +44,27 @@ public class DemoApplication {
                 employee.setFullName("Operative Trainee");
                 employee.setEmail("employee@cyberquest.internal");
                 employee.setRole("ROLE_EMPLOYEE");
-                employee.setPasswordHash(passwordEncoder.encode("employee26"));
+                employee.setPasswordHash(passwordEncoder.encode("employeePw"));
                 employee.setEnrolledInStarterQuest(true);
                 employee.setTotalXp(0);
                 userRepository.save(employee);
             }
 
             // Seed Complete 5-Module Defensive Quest Track
+            challengeRepository.findAll().forEach(ch -> {
+                boolean changed = false;
+                if ("Credential stuffing Vector Identification".equals(ch.getTitle())) {
+                    ch.setTitle("Password Spraying Vector Identification");
+                    ch.setScenario(ch.getScenario().replace("(192.168.12.130)", "").replace("Submit the attacking host address (192.168.12.130).", "Submite the attacking host address."));
+                    changed = true;
+                }
+                if ("Encryped DNS Tunneling Traffic Capture".equals(ch.getTitle())) {
+                    ch.setTitle("DNS Tunneling Traffic Capture");
+                    changed = true;
+                }
+                if (changed) challengeRepository.save(ch);
+            });
+
             if (challengeRepository.count() == 0) {
                 // Tier 1: Foundational SOC Identification
                 challengeRepository.save(new QuestChallenge(
@@ -100,5 +120,6 @@ public class DemoApplication {
                 System.out.println(">>> SEEDED 5-MODULE DEFENSIVE QUEST TRACK (750 MAX XP)");
             }
         };
+        
     }
 }

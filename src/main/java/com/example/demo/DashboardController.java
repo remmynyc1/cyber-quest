@@ -34,6 +34,16 @@ public class DashboardController {
         return securityLogRepository.findAll();
     }
 
+    @GetMapping("/leaderboard")
+    public List<Dtos.ManagerLeaderEntry> leaderboard() {
+        return userRepository.findAll().stream()
+            .filter(u -> "ROLE_EMPLOYEE".equals(u.getRole()) || "ROLE_ANALYST".equals(u.getRole()))
+            .sorted((a, b) -> Integer.compare(b.getTotalXp(), a.getTotalXp()))
+            .map(u -> new Dtos.ManagerLeaderEntry(u.getFullName(), u.getEmail(), u.getTotalXp(),
+                    u.getCompletedChallengeIds().size()))
+            .toList();
+    }
+
     @PostMapping("/threats/{id}/resolve")
     public ResponseEntity<SecurityLog> resolveThreat(@PathVariable Long id) {
         return securityLogRepository.findById(id).map(log -> {

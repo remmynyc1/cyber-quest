@@ -13,3 +13,9 @@ target/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+.env
+target/
+*.class
+.DS_Store
+

@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,6 +21,13 @@ public class UserAccount {
 
     @Column(name = "total_xp")
     private Integer totalXp = 0;
+
+    private Boolean mustChangePassword = false;
+    private Integer failedLoginAttempts = 0;
+    private LocalDateTime lockedUntil;
+
+    
+
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_completed_challenges", joinColumns = @JoinColumn(name = "user_id"))
@@ -49,4 +57,12 @@ public class UserAccount {
 
     public Set<Long> getCompletedChallengeIds() { return completedChallengeIds; }
     public void setCompletedChallengeIds(Set<Long> completedChallengeIds) { this.completedChallengeIds = completedChallengeIds; }
+
+public boolean isMustChangePassword() { return Boolean.TRUE.equals(mustChangePassword); }
+public void setMustChangePassword(boolean v) { this.mustChangePassword = v; }
+public int getFailedLoginAttempts() { return failedLoginAttempts != null ? failedLoginAttempts : 0; }
+public void setFailedLoginAttempts(int v) { this.failedLoginAttempts = v; }
+public LocalDateTime getLockedUntil() { return lockedUntil; }
+public void setLockedUntil(LocalDateTime v) { this.lockedUntil = v; }
+
 }

@@ -17,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserAccount account = userRepository.findByEmail(email)
+        UserAccount account = userRepository.findByEmail(email == null ? "" : email.trim().toLowerCase())
             .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         String roleName = account.getRole().replace("ROLE_", "");
@@ -26,6 +26,8 @@ public class CustomUserDetailsService implements UserDetailsService {
             .username(account.getEmail())
             .password(account.getPasswordHash())
             .roles(roleName)
+            .accountLocked(account.getLockedUntil() != null
+                && java.time.LocalDateTime.now().isBefore(account.getLockedUntil()))
             .build();
     }
 }

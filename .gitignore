@@ -19,3 +19,7 @@ target/
 *.class
 .DS_Store
 
+dist/
+data/
+logs/
+

@@ -1,0 +1,36 @@
+CYBER QUEST - PORTABLE EDITION (Windows)
+========================================
+
+WHAT THIS IS
+A self-contained copy of Cyber Quest. It includes its own Java runtime and a
+file-based database, so you do not need to install Java, Docker or PostgreSQL.
+
+HOW TO START
+1. Extract the WHOLE zip to a normal folder (Desktop, Documents or a USB drive).
+   Do not run it from inside the zip, and avoid C:\Program Files.
+2. Double-click  start.bat
+3. First time only: type a password for the manager and the employee account.
+4. Your browser opens at http://localhost:8080
+   Sign in as  manager@cyberquest.internal  or  employee@cyberquest.internal
+
+HOW TO STOP
+Double-click  stop.bat  when you are finished.
+
+WHERE YOUR DATA IS
+The  data  folder holds the database. Copy the whole folder to back it up or to
+move the program to another computer. Delete the  data  folder to start fresh
+(this erases all users and scores).
+The  logs  folder holds cyberquest.log, useful if something goes wrong.
+
+GOOD TO KNOW
+- Only this computer can reach the program (it listens on 127.0.0.1).
+- Run only one copy at a time. It uses port 8080.
+- Windows may say "Windows protected your PC" the first time. Choose
+  "More info" and then "Run anyway". The files are not digitally signed.
+- The practice phishing emails stay inside the program. Nothing is sent out.
+- The mock HR import is not included in this edition.
+
+IF IT DOES NOT START
+- Read the last lines of logs\cyberquest.log.
+- Make sure nothing else uses port 8080 (run stop.bat, then start.bat again).
+- Make sure you extracted every file (the runtime folder must exist).

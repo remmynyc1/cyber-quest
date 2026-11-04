@@ -6,265 +6,99 @@
     <title>Cyber Quest // SOC Dashboard</title>
     <style>
         :root {
-            --bg-dark: #070b12;
-            --panel-bg: #0f172a;
-            --border: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #64748b;
-            --cyan: #38bdf8;
-            --cyan-glow: rgba(56, 189, 248, 0.25);
-            --green: #4ade80;
-            --red: #ef4444;
-            --orange: #f59e0b;
+            --bg-dark: #070b12; --panel-bg: #0f172a; --border: #1e293b; --text-main: #f8fafc;
+            --text-muted: #94a3b8; --cyan: #38bdf8; --cyan-glow: rgba(56, 189, 248, 0.25);
+            --green: #4ade80; --red: #f87171; --orange: #fbbf24;
         }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0;
-            padding: 24px;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: var(--bg-dark);
+            color: var(--text-main); margin: 0; padding: 24px; line-height: 1.5; min-height: 100vh;
         }
-
+        :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
+            display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+            padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 24px;
         }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        h1 {
-            font-size: 18px;
-            letter-spacing: 1px;
-            margin: 0;
-            color: var(--cyan);
-        }
-
+        .brand { display: flex; align-items: center; gap: 14px; }
+        h1 { font-size: 19px; font-weight: 700; letter-spacing: 0.5px; margin: 0; color: var(--cyan); }
         .badge-live {
-            font-size: 11px;
-            background: rgba(74, 222, 128, 0.15);
-            color: var(--green);
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: 600;
+            font-size: 11px; background: rgba(74, 222, 128, 0.12); color: var(--green); padding: 6px 12px;
+            border-radius: 6px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center;
+            justify-content: center; white-space: nowrap; border: 1px solid rgba(74, 222, 128, 0.25);
         }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .header-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .btn-primary, button.btn-primary {
+            background: var(--cyan); color: #04121c; border: none; border-radius: 6px; padding: 10px 18px;
+            font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; text-decoration: none;
+            display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; line-height: 1.2;
+            transition: filter 0.15s ease, box-shadow 0.15s ease;
         }
-
-        .metrics-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+        .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 0 14px var(--cyan-glow); text-decoration: none; }
+        .btn-logout {
+            color: var(--red); text-decoration: none; font-size: 13px; font-weight: 700; border: 1px solid rgba(248, 113, 113, 0.4);
+            padding: 9px 16px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+            white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease;
         }
-
+        .btn-logout:hover { background: rgba(248, 113, 113, 0.1); border-color: var(--red); text-decoration: none; }
+        .btn-delete {
+            background: transparent; color: var(--red); border: 1px solid rgba(248, 113, 113, 0.4); border-radius: 4px;
+            padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.15s ease;
+        }
+        .btn-delete:hover { background: rgba(248, 113, 113, 0.15); }
+        .btn-neutralize {
+            background: rgba(251, 191, 36, 0.12); color: var(--orange); border: 1px solid rgba(251, 191, 36, 0.4);
+            border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.15s ease;
+        }
+        .btn-neutralize:hover { background: rgba(251, 191, 36, 0.22); }
+        .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        @media (max-width: 900px) { .metrics-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 540px) { .metrics-row { grid-template-columns: 1fr; } }
         .metric-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
+            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 18px 20px; transition: border-color 0.15s ease;
         }
-
-        .metric-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-
-        .metric-value {
-            font-size: 20px;
-            font-weight: 700;
-        }
-
+        .metric-card:hover { border-color: rgba(56, 189, 248, 0.35); }
+        .metric-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
+        .metric-value { font-size: 22px; font-weight: 700; line-height: 1.2; }
         .status-green { color: var(--green); }
         .status-red { color: var(--red); }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
+        .grid-container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+        @media (max-width: 1080px) { .grid-container { grid-template-columns: 1fr; } }
         .card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
+            padding: 22px; margin-bottom: 20px; transition: border-color 0.15s ease;
         }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-
-        .card-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-main);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .subtitle {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
+        .card:hover { border-color: rgba(56, 189, 248, 0.3); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .card-title { font-size: 13px; font-weight: 700; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; }
+        .subtitle { font-size: 12px; color: var(--text-muted); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th {
-            text-align: left;
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-muted);
-            font-size: 11px;
-            text-transform: uppercase;
+            text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-muted);
+            font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
         }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(30, 41, 59, 0.7);
-        }
-
-        tr:hover {
-            background: rgba(56, 189, 248, 0.03);
-        }
-
+        td { padding: 12px; border-bottom: 1px solid rgba(30, 41, 59, 0.7); }
+        tr:hover { background: rgba(56, 189, 248, 0.03); }
         .role-pill {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--cyan);
-            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+            background: rgba(56, 189, 248, 0.12); color: var(--cyan); border: 1px solid rgba(56, 189, 248, 0.3);
         }
-
         .quest-active { color: var(--green); font-weight: 600; }
         .quest-inactive { color: var(--text-muted); }
-
-        button {
-            cursor: pointer;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: var(--cyan);
-            color: #070b12;
-        }
-
-        .btn-primary:hover {
-            box-shadow: 0 0 12px var(--cyan-glow);
-        }
-
-        .btn-delete {
-            background: transparent;
-            color: var(--red);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            padding: 4px 8px;
-            font-size: 11px;
-        }
-
-        .btn-delete:hover {
-            background: rgba(239, 68, 68, 0.15);
-        }
-
-        .btn-neutralize {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--orange);
-            border: 1px solid rgba(245, 158, 11, 0.4);
-            padding: 4px 8px;
-            font-size: 11px;
-        }
-
-        .btn-neutralize:hover {
-            background: rgba(245, 158, 11, 0.25);
-        }
-
-        .btn-logout {
-            color: var(--red);
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            padding: 6px 12px;
-            border-radius: 6px;
-        }
-
-        .btn-logout:hover {
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px; }
         input, select {
-            width: 100%;
-            background: #080c14;
-            border: 1px solid var(--border);
-            padding: 8px 10px;
-            border-radius: 6px;
-            color: var(--text-main);
-            font-size: 13px;
-            box-sizing: border-box;
+            width: 100%; background: #080c14; border: 1px solid var(--border); padding: 10px 12px;
+            border-radius: 6px; color: var(--text-main); font-size: 13px; box-sizing: border-box; transition: border-color 0.15s ease;
         }
-
-        .threat-box {
-            border-left: 4px solid var(--red);
-            background: rgba(239, 68, 68, 0.06);
-            padding: 16px;
-            border-radius: 4px;
-            margin-bottom: 16px;
-        }
-
-        .hex-preview-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 12px;
-            background: #080c14;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-
-        .hex-swatch {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background-color: #E63946;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+        input:focus, select:focus { border-color: var(--cyan); outline: none; }
+        .threat-box { border-left: 4px solid var(--red); background: rgba(248, 113, 113, 0.06); padding: 16px 18px; border-radius: 8px; margin-bottom: 18px; }
+        .hex-preview-box { display: flex; align-items: center; gap: 12px; margin-top: 14px; background: #080c14; padding: 12px; border-radius: 6px; border: 1px solid var(--border); }
+        .hex-swatch { width: 32px; height: 32px; border-radius: 6px; background-color: #E63946; border: 1px solid rgba(255, 255, 255, 0.2); flex: none; }
     </style>
 </head>
 <body>
-
-    <!-- Header -->
     <header>
         <div class="brand">
             <h1>CYBER QUEST // SOC DASHBOARD</h1>
@@ -272,12 +106,11 @@
         </div>
         <div class="header-actions">
             <button class="btn-primary" onclick="refreshAll()">↻ Refresh Telemetry</button>
-            <a href="/training.html" class="btn-primary" style="text-decoration:none;display:inline-block;">Training &amp; Phishing Simulations</a>
+            <a href="/training.html" class="btn-primary">Training &amp; Phishing Simulations</a>
             <a href="/logout" class="btn-logout">Terminate Session</a>
         </div>
     </header>
 
-    <!-- 4 Telemetry Metric Cards -->
     <div class="metrics-row">
         <div class="metric-card">
             <div class="metric-label">Enrolled Agents</div>
@@ -297,12 +130,8 @@
         </div>
     </div>
 
-    <!-- Main Section -->
     <div class="grid-container">
-
-        <!-- Left Column: Personnel & Threat Logs -->
         <div>
-            <!-- Personnel Table -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Active Personnel & Ingested Agents</span>
@@ -311,12 +140,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Starter Quest</th>
-                            <th>Action</th>
+                            <th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Starter Quest</th><th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="userTableBody">
@@ -325,7 +149,6 @@
                 </table>
             </div>
 
-            <!-- Threat Feed Table -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Live SOC Threat & Infiltration Feed</span>
@@ -334,12 +157,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Event Type</th>
-                            <th>Severity</th>
-                            <th>Target Operative</th>
-                            <th>Status</th>
-                            <th>Action</th>
+                            <th>ID</th><th>Event Type</th><th>Severity</th><th>Target Operative</th><th>Status</th><th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="incident-table-body">
@@ -348,7 +166,6 @@
                 </table>
             </div>
 
-            <!-- Operative Leaderboard -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Operative Readiness Leaderboard</span>
@@ -357,11 +174,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Rank</th>
-                            <th>Operative</th>
-                            <th>Email</th>
-                            <th>Quests Done</th>
-                            <th>Total XP</th>
+                            <th>Rank</th><th>Operative</th><th>Email</th><th>Quests Done</th><th>Total XP</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-body">
@@ -371,32 +184,29 @@
             </div>
         </div>
 
-        <!-- Right Column: Security Anomaly & Manual Register -->
         <div>
-            <!-- Active Anomaly Card with Live Bridge -->
             <div class="card" id="anomaly-card">
                 <div class="card-header">
                     <span class="card-title">Active Security Anomaly</span>
-                    <span class="badge-live" id="anomaly-badge" style="background: rgba(239, 68, 68, 0.2); color: var(--red);">● ATTACK ACTIVE</span>
+                    <span class="badge-live" id="anomaly-badge" style="background: rgba(248, 113, 113, 0.15); color: var(--red); border-color: rgba(248, 113, 113, 0.3);">● ATTACK ACTIVE</span>
                 </div>
                 <div class="threat-box" style="margin-top: 10px;">
                     <div style="color: var(--red); font-weight: 700; font-size: 13px; margin-bottom: 4px;">THREAT-084-INFILTRATION</div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin: 0;">
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0;">
                         Synthetic anomaly detected in network logs. Physical-to-digital validation required to trigger pfSense mitigation.
                     </p>
                     <div class="hex-preview-box">
                         <div class="hex-swatch"></div>
                         <div>
-                            <div style="font-size: 10px; color: var(--text-muted);">REQUIRED COLOR KEY</div>
+                            <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">REQUIRED COLOR KEY</div>
                             <div style="font-family: monospace; font-size: 14px; font-weight: 700; color: #E63946;">#E63946 (Crimson)</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Optical Companion Verification Control -->
-                <div style="margin-top: 12px;">
+                <div style="margin-top: 14px;">
                     <label>Optical Capture Input (Hex Key)</label>
-                    <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
                         <input type="text" id="opticalHexInput" placeholder="#E63946" style="flex: 1; text-transform: uppercase;">
                         <button class="btn-primary" onclick="submitOpticalKey()">Mitigate</button>
                     </div>
@@ -404,10 +214,9 @@
                 </div>
             </div>
 
-            <!-- Manual Registration Form -->
             <div class="card">
                 <span class="card-title">Enroll Agent (Manual)</span>
-                <form id="addUserForm" onsubmit="createUser(event)" style="margin-top: 14px;">
+                <form id="addUserForm" onsubmit="createUser(event)" style="margin-top: 16px;">
                     <div class="form-group">
                         <label>Full Name</label>
                         <input type="text" id="formName" placeholder="e.g. Marcus Vance" required>
@@ -424,14 +233,12 @@
                             <option value="ROLE_MANAGER">ROLE_MANAGER (Supervisor)</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 6px;">Register Agent</button>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 8px;">Register Agent</button>
                 </form>
             </div>
         </div>
-
     </div>
 
-    <!-- Telemetry Scripts -->
     <script src="/common.js"></script>
     <script>
         async function loadUsers() {
@@ -441,7 +248,6 @@
                 const users = await response.json();
                 const tbody = document.getElementById('userTableBody');
                 tbody.innerHTML = '';
-
                 users.forEach(user => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -449,11 +255,7 @@
                         <td style="font-weight: 600;">${esc(user.fullName || 'Unnamed')}</td>
                         <td style="color: var(--text-muted);">${esc(user.email)}</td>
                         <td><span class="role-pill">${esc(user.role || 'ROLE_USER')}</span></td>
-                        <td>
-                            <span class="${user.enrolledInStarterQuest ? 'quest-active' : 'quest-inactive'}">
-                                ${user.enrolledInStarterQuest ? '● Enrolled' : '○ Pending'}
-                            </span>
-                        </td>
+                        <td><span class="${user.enrolledInStarterQuest ? 'quest-active' : 'quest-inactive'}">${user.enrolledInStarterQuest ? '● Enrolled' : '○ Pending'}</span></td>
                         <td>
                             <button class="btn-neutralize" onclick="resetPassword(${Number(user.id)})">Reset password</button>
                             <button class="btn-delete" onclick="deleteUser(${Number(user.id)})">Remove</button>
@@ -461,12 +263,9 @@
                     `;
                     tbody.appendChild(tr);
                 });
-
                 document.getElementById('totalUsers').innerText = users.length;
                 document.getElementById('lastUpdated').innerText = 'Synced: ' + new Date().toLocaleTimeString();
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function loadIncidentLogs() {
@@ -476,7 +275,6 @@
                 const logs = await response.json();
                 const tbody = document.getElementById('incident-table-body');
                 if (!tbody) return;
-
                 let activeThreats = 0;
                 tbody.innerHTML = logs.map(log => {
                     if (!log.resolved) activeThreats++;
@@ -488,29 +286,20 @@
                             <td style="color: ${sevColor}; font-weight: 600;">${esc(log.severity)}</td>
                             <td style="color: var(--text-muted);">${esc(log.targetEmail)}</td>
                             <td>${log.resolved ? '<span class="status-green">RESOLVED</span>' : '<span class="status-red">ACTIVE</span>'}</td>
-                            <td>
-                                ${log.resolved ? '—' : `<button class="btn-neutralize" onclick="resolveThreat(${log.id})">Neutralize</button>`}
-                            </td>
+                            <td>${log.resolved ? '—' : `<button class="btn-neutralize" onclick="resolveThreat(${log.id})">Neutralize</button>`}</td>
                         </tr>
                     `;
                 }).join('');
-
                 const threatBadge = document.getElementById('activeThreatsCount');
                 if (threatBadge) threatBadge.innerText = activeThreats;
-            } catch (error) {
-                console.error('Incident log load failure:', error);
-            }
+            } catch (error) { console.error('Incident log load failure:', error); }
         }
 
         async function resolveThreat(id) {
             try {
                 const response = await fetch(`/api/dashboard/threats/${id}/resolve`, { method: 'POST' });
-                if (response.ok) {
-                    loadIncidentLogs();
-                }
-            } catch (error) {
-                console.error(error);
-            }
+                if (response.ok) loadIncidentLogs();
+            } catch (error) { console.error(error); }
         }
 
         async function loadLeaderboard() {
@@ -520,7 +309,6 @@
                 const leaderboard = await res.json();
                 const tbody = document.getElementById('leaderboard-body');
                 if (!tbody) return;
-
                 tbody.innerHTML = leaderboard.map((op, idx) => `
                     <tr>
                         <td style="font-weight: 700; color: var(--cyan);">#${idx + 1}</td>
@@ -530,9 +318,7 @@
                         <td style="font-weight: 700; color: var(--green);">${op.totalXp} XP</td>
                     </tr>
                 `).join('');
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function checkAnomalyStatus() {
@@ -540,58 +326,41 @@
                 const res = await fetch('/api/threats/status');
                 if (!res.ok) return;
                 const data = await res.json();
-                
                 const badge = document.getElementById('anomaly-badge');
                 const input = document.getElementById('opticalHexInput');
-                
                 if (!data.active) {
                     badge.innerText = '✔ NEUTRALIZED';
-                    badge.style.background = 'rgba(74, 222, 128, 0.2)';
+                    badge.style.background = 'rgba(74, 222, 128, 0.15)';
+                    badge.style.borderColor = 'rgba(74, 222, 128, 0.3)';
                     badge.style.color = 'var(--green)';
                     if (input) input.disabled = true;
                 } else {
                     badge.innerText = '● ATTACK ACTIVE';
-                    badge.style.background = 'rgba(239, 68, 68, 0.2)';
+                    badge.style.background = 'rgba(248, 113, 113, 0.15)';
+                    badge.style.borderColor = 'rgba(248, 113, 113, 0.3)';
                     badge.style.color = 'var(--red)';
                     if (input) input.disabled = false;
                 }
-            } catch (e) {
-                console.error('Failed to load anomaly status:', e);
-            }
+            } catch (e) { console.error('Failed to load anomaly status:', e); }
         }
 
         async function submitOpticalKey() {
             const input = document.getElementById('opticalHexInput');
             const msg = document.getElementById('anomaly-status-msg');
             const hex = input.value.trim();
-
-            if (!hex) {
-                msg.innerText = 'Input color hex value.';
-                msg.style.color = 'var(--red)';
-                return;
-            }
-
+            if (!hex) { msg.innerText = 'Input color hex value.'; msg.style.color = 'var(--red)'; return; }
             try {
                 const res = await fetch('/api/threats/verify-key', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ hexCode: hex })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hexCode: hex })
                 });
                 const data = await res.json();
-
                 if (res.ok && data.status === 'SUCCESS') {
-                    msg.innerText = '✔ ' + data.message;
-                    msg.style.color = 'var(--green)';
-                    checkAnomalyStatus();
-                    loadIncidentLogs();
+                    msg.innerText = '✔ ' + data.message; msg.style.color = 'var(--green)';
+                    checkAnomalyStatus(); loadIncidentLogs();
                 } else {
-                    msg.innerText = '✖ ' + (data.message || 'Verification rejected');
-                    msg.style.color = 'var(--red)';
+                    msg.innerText = '✖ ' + (data.message || 'Verification rejected'); msg.style.color = 'var(--red)';
                 }
-            } catch (e) {
-                msg.innerText = 'Error connecting to threat bridge.';
-                msg.style.color = 'var(--red)';
-            }
+            } catch (e) { msg.innerText = 'Error connecting to threat bridge.'; msg.style.color = 'var(--red)'; }
         }
 
         async function createUser(event) {
@@ -601,13 +370,9 @@
                 email: document.getElementById('formEmail').value,
                 role: document.getElementById('formRole').value
             };
-
             const response = await fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newUser)
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newUser)
             });
-
             if (response.ok) {
                 const created = await response.json();
                 document.getElementById('addUserForm').reset();
@@ -634,17 +399,8 @@
             if (response.ok) loadUsers();
         }
 
-        function refreshAll() {
-            loadUsers();
-            loadIncidentLogs();
-            loadLeaderboard();
-            checkAnomalyStatus();
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            refreshAll();
-            setInterval(refreshAll, 5000);
-        });
+        function refreshAll() { loadUsers(); loadIncidentLogs(); loadLeaderboard(); checkAnomalyStatus(); }
+        document.addEventListener('DOMContentLoaded', () => { refreshAll(); setInterval(refreshAll, 5000); });
     </script>
 </body>
 </html>

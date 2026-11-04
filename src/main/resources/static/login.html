@@ -3,159 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Quest // Secure Gateway Login</title>
+    <title>Cyber Quest // Defense Access</title>
     <style>
         :root {
-            --bg-dark: #070b12;
-            --panel-bg: #0f172a;
-            --border: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #64748b;
-            --cyan: #38bdf8;
-            --cyan-glow: rgba(56, 189, 248, 0.25);
-            --green: #4ade80;
-            --red: #ef4444;
+            --bg-dark: #070b12; --panel-bg: #0f172a; --border: #1e293b; --text-main: #f8fafc;
+            --text-muted: #94a3b8; --cyan: #38bdf8; --cyan-glow: rgba(56, 189, 248, 0.25);
+            --green: #4ade80; --red: #f87171;
         }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg-dark);
+            color: var(--text-main); margin: 0; min-height: 100vh; display: flex; align-items: center;
+            justify-content: center; padding: 20px;
         }
-
-        .login-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            width: 100%;
-            max-width: 420px;
-            padding: 32px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .header h1 {
-            color: var(--cyan);
-            font-size: 20px;
-            letter-spacing: 1px;
-            margin: 0 0 6px 0;
-        }
-
-        .header p {
-            color: var(--text-muted);
-            font-size: 12px;
-            margin: 0;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
+        :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+        .box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; padding: 28px; width: 100%; max-width: 420px; }
+        h1 { margin: 0 0 6px; font-size: 20px; font-weight: 700; color: var(--cyan); }
+        p { color: var(--text-muted); font-size: 13px; margin: 0 0 18px; line-height: 1.4; }
+        label { display: block; font-size: 12px; color: var(--text-muted); margin: 12px 0 4px; }
         input {
-            width: 100%;
-            background: #080c14;
-            border: 1px solid var(--border);
-            padding: 10px 12px;
-            border-radius: 6px;
-            color: var(--text-main);
-            font-size: 13px;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; background: #080c14; border: 1px solid var(--border); color: var(--text-main);
+            border-radius: 6px; padding: 10px 12px; font-size: 14px; transition: border-color 0.15s ease;
         }
-
-        input:focus {
-            border-color: var(--cyan);
-            box-shadow: 0 0 8px var(--cyan-glow);
-        }
-
+        input:focus { border-color: var(--cyan); outline: none; }
         button {
-            width: 100%;
-            background: var(--cyan);
-            color: #070b12;
-            border: none;
-            padding: 11px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: box-shadow 0.2s;
+            width: 100%; margin-top: 18px; background: var(--cyan); color: #04121c; border: none;
+            border-radius: 6px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: filter 0.15s ease, box-shadow 0.15s ease;
         }
-
-        button:hover {
-            box-shadow: 0 0 14px var(--cyan-glow);
-        }
-
+        button:hover { filter: brightness(1.08); box-shadow: 0 0 14px var(--cyan-glow); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .error-banner {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: var(--red);
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            margin-bottom: 16px;
-            display: none;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .credential-hints {
-            margin-top: 24px;
-            border-top: 1px solid var(--border);
-            padding-top: 14px;
-            font-size: 11px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .credential-hints strong {
-            color: var(--cyan);
+            background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.4); color: var(--red);
+            padding: 10px 12px; border-radius: 6px; font-size: 13px; line-height: 1.4; margin-bottom: 16px; display: none;
         }
     </style>
 </head>
 <body>
+    <main class="box">
+        <h1>CYBER QUEST // DEFENSE ACCESS</h1>
+        <p>SOC Telemetry &amp; Defensive Range Gateway</p>
 
-    <div class="login-card">
-        <div class="header">
-            <h1>CYBER QUEST // DEFENSE ACCESS</h1>
-            <p>SOC Telemetry & Defensive Range Gateway</p>
-        </div>
-
-        <div id="errorBanner" class="error-banner">
+        <div id="errorBanner" class="error-banner" role="alert">
             Sign-in failed. Check your email and password. After 5 failed attempts an account is locked for 15 minutes.
         </div>
 
         <form action="/login" method="post">
-            <div class="form-group">
-                <label>Work email</label>
-                <input type="text" name="username" placeholder="name@cyberquest.internal" required autofocus>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" placeholder="••••••••" required>
-            </div>
+            <label for="username">Work email</label>
+            <input id="username" type="text" name="username" placeholder="name@cyberquest.internal" autocomplete="username" required autofocus>
+
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+
             <button type="submit">Sign in</button>
         </form>
-    </div>
+    </main>
 
     <script>
         if (window.location.search.includes('error')) {

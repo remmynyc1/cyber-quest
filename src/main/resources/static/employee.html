@@ -394,7 +394,14 @@
         .input-row input { flex: 1; min-width: 220px; }
         .leader { margin-top: 24px; max-width: 440px; }
         .leader ol { padding-left: 20px; margin: 8px 0; font-size: 14px; }
+    
+        .embedded-tool-box { background: #000; border:1px solid #1e293b; border-radius: 8px; margin: 14px 0; overflow: hidden;}
+        .tool-header-bar { background: #0f172a; border-bottom: 1px solid #1e293b; padding: 8px 14px; display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-family: monospace;}
+        .tool-frame { width: 100%; height: 300px; border: none; display: block;}
+        .action-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px;}
+
     </style>
+
 </head>
 <body>
     <header>
@@ -672,26 +679,48 @@
         }
 
         // ---------- analyst labs ----------
-        async function loadLabs() {
-            const [pr, cr] = await Promise.all([fetch('/api/quest/my-stats'), fetch('/api/quest/challenges')]);
-            if (!pr.ok || !cr.ok) return;
-            const done = (await pr.json()).completedChallenges || [];
-            const list = await cr.json();
-            $('challenge-list').innerHTML = list.map(ch => {
-                const solved = done.includes(ch.id);
-                return `<div class="quest-card" style="${solved ? 'border-color: rgba(74,222,128,.45);' : ''}">
-                    <div class="quest-header"><h3 style="margin:0;color:${solved ? 'var(--green)' : 'var(--cyan)'};font-size:15px;">${solved ? '&#10003; ' : ''}${esc(ch.title)}</h3>
-                    <span class="xp">+${Number(ch.pointValue)} XP</span></div>
-                    <span class="tool-badge">Tool: ${esc(ch.requiredTool || 'Terminal / CLI')}</span>
-                    <p style="font-size:13px;color:#cbd5e1;margin:0 0 12px;">${esc(ch.scenario)}</p>
-                    <a class="btn" href="/api/quest/artifacts/${Number(ch.id)}">Download evidence (${esc(ch.artifactName)})</a>
-                    <div class="input-row">
-                        <input type="text" id="flag-${Number(ch.id)}" aria-label="Answer for ${esc(ch.title)}" placeholder="${solved ? 'Solved' : 'Enter what you found'}" ${solved ? 'disabled' : ''}>
-                        <button class="primary" data-lab="${Number(ch.id)}" ${solved ? 'disabled' : ''}>${solved ? 'Solved' : 'Submit'}</button>
-                        <span id="result-${Number(ch.id)}" class="muted" role="status"></span>
-                    </div></div>`;
-            }).join('');
-        }
+       async function loadLabs() {
+    const [pr, cr] = await Promise.all([fetch('/api/quest/my-stats'), fetch('/api/quest/challenges')]);
+    if (!pr.ok || !cr.ok) return;
+    const done = (await pr.json()).completedChallenges || [];
+    const list = await cr.json();
+
+    $('challenge-list').innerHTML = list.map(ch => {
+        const solved = done.includes(ch.id);
+        return `
+        <div class="quest-card" id="card-${Number(ch.id)}" style="${solved ? 'border-color: rgba(74,222,128,.45);' : ''}">
+            <div class="quest-header">
+                <h3 style="margin:0;color:${solved ? 'var(--green)' : 'var(--cyan)'};font-size:16px;">
+                    ${solved ? '&#10003; ' : ''}${esc(ch.title)}
+                </h3>
+                <span class="xp">+${Number(ch.pointValue)} XP</span>
+            </div>
+            <div><span class="tool-badge">Tool: ${esc(ch.requiredTool || 'Linux Shell')}</span></div>
+            <p style="font-size:13px;color:#cbd5e1;margin:6px 0 12px;">${esc(ch.scenario)}</p>
+
+            <!-- Real Embedded Debian Terminal -->
+            <div class="embedded-tool-box">
+                <div class="tool-header-bar">
+                    <span>bash — questuser@cyberquest-render: ~/evidence</span>
+                    <span>Target: ${esc(ch.artifactName)}</span>
+                </div>
+                <iframe class="tool-frame" src="/terminal/" title="Terminal for ${esc(ch.title)}"></iframe>
+            </div>
+
+            <!-- Controls: Evidence Download + Submit Input -->
+            <div class="action-row">
+                <a class="btn" href="/evidence/${esc(ch.artifactName)}" download>
+                    Download evidence (${esc(ch.artifactName)})
+                </a>
+                <div style="display:flex; gap:8px; align-items:center; flex:1; max-width:440px;">
+                    <input type="text" id="flag-${Number(ch.id)}" placeholder="${solved ? 'Solved' : 'Enter what you found'}" ${solved ? 'disabled' : ''}>
+                    <button class="primary" data-lab="${Number(ch.id)}" ${solved ? 'disabled' : ''}>${solved ? 'Solved' : 'Submit'}</button>
+                    <span id="result-${Number(ch.id)}" class="muted" role="status"></span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
         $('challenge-list').addEventListener('click', async e => {
             const b = e.target.closest('[data-lab]'); if (!b) return;
             const id = b.dataset.lab, out = $('result-' + id), answer = $('flag-' + id).value.trim();

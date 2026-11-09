@@ -20,10 +20,8 @@ public class DemoApplication {
     public CommandLineRunner seedData(UserRepository userRepository, 
                                       PasswordEncoder passwordEncoder, 
                                       QuestChallengeRepository challengeRepository, 
-                                      @Value("${cq.seed.manager-password:manager26}")
-                                      String managerPw,
-                                      @Value("${cq.seed.employee-password:employee26}")
-                                      String employeePw) {
+                                      @Value("${cq.seed.manager-password:manager26}") String managerPw,
+                                      @Value("${cq.seed.employee-password:employee26}") String employeePw) {
 
         return args -> {
             // Seed Manager Account
@@ -32,7 +30,7 @@ public class DemoApplication {
                 manager.setFullName("Inspector Chief");
                 manager.setEmail("manager@cyberquest.internal");
                 manager.setRole("ROLE_MANAGER");
-                manager.setPasswordHash(passwordEncoder.encode("managerPw"));
+                manager.setPasswordHash(passwordEncoder.encode(managerPw));
                 manager.setEnrolledInStarterQuest(true);
                 manager.setTotalXp(0);
                 userRepository.save(manager);
@@ -44,29 +42,37 @@ public class DemoApplication {
                 employee.setFullName("Operative Trainee");
                 employee.setEmail("employee@cyberquest.internal");
                 employee.setRole("ROLE_EMPLOYEE");
-                employee.setPasswordHash(passwordEncoder.encode("employeePw"));
+                employee.setPasswordHash(passwordEncoder.encode(employeePw));
                 employee.setEnrolledInStarterQuest(true);
                 employee.setTotalXp(0);
                 userRepository.save(employee);
             }
 
-            // Seed Complete 5-Module Defensive Quest Track
+            // Patch existing database records
             challengeRepository.findAll().forEach(ch -> {
                 boolean changed = false;
-                if ("Credential stuffing Vector Identification".equals(ch.getTitle())) {
+                if ("Credential Stuffing Vector Identification".equalsIgnoreCase(ch.getTitle()) ||
+                    "Credential stuffing Vector Identification".equals(ch.getTitle())) {
                     ch.setTitle("Password Spraying Vector Identification");
-                    ch.setScenario(ch.getScenario().replace("(192.168.12.130)", "").replace("Submit the attacking host address (192.168.12.130).", "Submite the attacking host address."));
+                    if (ch.getScenario() != null) {
+                        ch.setScenario(ch.getScenario()
+                            .replace("Submit the attacking host address (192.168.12.130).", "Submit the attacking host address.")
+                            .replace("(192.168.12.130)", ""));
+                    }
                     changed = true;
                 }
-                if ("Encryped DNS Tunneling Traffic Capture".equals(ch.getTitle())) {
+                if ("Encryped DNS Tunneling Traffic Capture".equalsIgnoreCase(ch.getTitle()) ||
+                    "Encrypted DNS Tunneling Traffic Capture".equalsIgnoreCase(ch.getTitle())) {
                     ch.setTitle("DNS Tunneling Traffic Capture");
                     changed = true;
                 }
-                if (changed) challengeRepository.save(ch);
+                if (changed) {
+                    challengeRepository.save(ch);
+                }
             });
 
+            // Seed 5-Module Defensive Quest Track if table is empty
             if (challengeRepository.count() == 0) {
-                // Tier 1: Foundational SOC Identification
                 challengeRepository.save(new QuestChallenge(
                     "Perimeter Port Reconnaissance Triage",
                     "A public-facing gateway was probed during off-hours. Analysis indicates attempts against default administrative services. Submit the default unencrypted remote access port targeted.",
@@ -78,8 +84,8 @@ public class DemoApplication {
                 ));
 
                 challengeRepository.save(new QuestChallenge(
-                    "Credential Stuffing Vector Identification",
-                    "Internal IAM telemetry logged rapid failed authentication attempts across consecutive executive accounts originating from a single internal subnet IP. Submit the attacking host address (192.168.12.130).",
+                    "Password Spraying Vector Identification",
+                    "Internal IAM telemetry logged rapid failed authentication attempts across consecutive executive accounts originating from a single internal subnet IP. Submit the attacking host address.",
                     "IDENTITY_ACCESS",
                     "192.168.12.130",
                     100,
@@ -87,7 +93,6 @@ public class DemoApplication {
                     "auth_fail_stream.txt"
                 ));
 
-                // Tier 2: Real Forensic Tool Artifact Investigations
                 challengeRepository.save(new QuestChallenge(
                     "SSH Brute Force Forensic Extraction",
                     "A public bastion server logged multiple unauthorized authentication events. Download the audit log and extract the source IP conducting the dictionary attack.",
@@ -109,7 +114,7 @@ public class DemoApplication {
                 ));
 
                 challengeRepository.save(new QuestChallenge(
-                    "Encrypted DNS Tunneling Traffic Capture",
+                    "DNS Tunneling Traffic Capture",
                     "A network tap captured an anomalous outbound burst. Download the .pcap capture, filter the DNS traffic in Wireshark, and extract the spoofed sub-domain key prefixed before .cyberquest.",
                     "NETWORK_TRAFFIC",
                     "c2-key-992",
@@ -117,9 +122,9 @@ public class DemoApplication {
                     "Wireshark / TShark",
                     "dns_exfil_traffic.pcap"
                 ));
+
                 System.out.println(">>> SEEDED 5-MODULE DEFENSIVE QUEST TRACK (750 MAX XP)");
             }
         };
-        
     }
 }

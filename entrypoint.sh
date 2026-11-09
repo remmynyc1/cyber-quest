@@ -1,25 +1,24 @@
-#!/usr/bin/env bash 
-set -e 
+#!/usr/bin/env bash
+set -e
 
-# Default to 8080 if running outside Render
-export PORT="${PORT:-8080}"
+# Default to Render standard port 10000 if $PORT is unset
+export PORT="${PORT:-10000}"
 
-# 1. Inject the dynamic $PORT into Nginx configuration
+# 1. Generate Nginx configuration with the assigned external port
 envsubst '${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
-# 2. Start Spring Boot on local port 8080
-echo "Starting Spring Boot on port 8080..."
-SERVER_PORT=8080 java -jar /app/app.jar &
+# 2. Start Spring Boot on dedicated internal port 8085
+echo "Starting Spring Boot on 127.0.0.1:8085..."
+java -Dserver.port=8085 -Dserver.address=127.0.0.1 -jar /app/app.jar &
 
-# 3. Start ttyd on local port 7681
-# mktemp creates a private workspace per tab so users don't overwrite each other's work
-echo "Starting ttyd on port 7681..."
-su - questuser -c "ttyd -p 7681 -b /terminal -W bash -c'
+# 3. Start ttyd bound strictly to loopback (127.0.0.1:7681)
+echo "Starting ttyd on 127.0.0.1:7681..."
+su - questuser -c "ttyd -i 127.0.0.1 -p 7681 -b /terminal -W bash -c '
     SESSION_DIR=\$(mktemp -d /tmp/quest_XXXXXX)
     cp -r /home/questuser/evidence \"\$SESSION_DIR/\"
     cd \"\$SESSION_DIR/evidence\"
-    clear 
-   echo \"===================================================================\"
+    clear
+    echo \"===================================================================\"
     echo \"  CYBER QUEST FORENSIC WORKSPACE (Debian GNU/Linux)\"
     echo \"  Tools: grep, awk, tshark (Wireshark CLI), nmap, coreutils\"
     echo \"  Directory: \$(pwd)\"
@@ -27,6 +26,7 @@ su - questuser -c "ttyd -p 7681 -b /terminal -W bash -c'
     ls -lah
     exec bash
 '" &
-# 4. Start Nginx in the foreground to keep the container alive 
-echo "Starting Nginx reverse proxy on port $PORT..."
+
+# 4. Start Nginx in the foreground to listen on $PORT
+echo "Starting Nginx on public port $PORT..."
 exec nginx -g 'daemon off;'

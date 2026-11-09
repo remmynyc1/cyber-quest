@@ -687,6 +687,39 @@
 
     $('challenge-list').innerHTML = list.map(ch => {
         const solved = done.includes(ch.id);
+        const tool = ch.requiredTool || '';
+        
+        let toolHtml = '';
+        // Real Terminal for Command-line / TShark / Nmap labs
+        if (tool.includes('Terminal') || tool.includes('TShark') || tool.includes('Nmap')) {
+            toolHtml = `
+            <div class="embedded-tool-box">
+                <div class="tool-header-bar">
+                    <span>bash — questuser@cyberquest-render: ~/evidence/${esc(ch.artifactName)}</span>
+                    <span>Live Linux Container</span>
+                </div>
+                <iframe class="tool-frame" src="/terminal/" title="Terminal"></iframe>
+            </div>`;
+        } 
+        // Specialized Web Forensics Viewer for SIEM & Email
+        else if (tool.includes('SIEM')) {
+            toolHtml = `
+            <div class="embedded-tool-box" style="padding:14px;background:#030712;">
+                <div class="tool-header-bar" style="margin:-14px -14px 10px;background:#0b1120;">
+                    <span>SIEM Telemetry Stream: ${esc(ch.artifactName)}</span>
+                </div>
+                <pre style="color:#38bdf8;margin:0;font-family:monospace;font-size:12px;max-height:180px;overflow-y:auto;" id="siem-raw-${ch.id}">Loading stream...</pre>
+            </div>`;
+        } else {
+            toolHtml = `
+            <div class="embedded-tool-box" style="padding:14px;background:#030712;">
+                <div class="tool-header-bar" style="margin:-14px -14px 10px;background:#0b1120;">
+                    <span>RFC 822 Header Dissector: ${esc(ch.artifactName)}</span>
+                </div>
+                <pre style="color:#94a3b8;margin:0;font-family:monospace;font-size:12px;max-height:180px;overflow-y:auto;" id="email-raw-${ch.id}">Loading headers...</pre>
+            </div>`;
+        }
+
         return `
         <div class="quest-card" id="card-${Number(ch.id)}" style="${solved ? 'border-color: rgba(74,222,128,.45);' : ''}">
             <div class="quest-header">
@@ -695,19 +728,11 @@
                 </h3>
                 <span class="xp">+${Number(ch.pointValue)} XP</span>
             </div>
-            <div><span class="tool-badge">Tool: ${esc(ch.requiredTool || 'Linux Shell')}</span></div>
+            <div><span class="tool-badge">Tool: ${esc(tool)}</span></div>
             <p style="font-size:13px;color:#cbd5e1;margin:6px 0 12px;">${esc(ch.scenario)}</p>
 
-            <!-- Real Embedded Debian Terminal -->
-            <div class="embedded-tool-box">
-                <div class="tool-header-bar">
-                    <span>bash — questuser@cyberquest-render: ~/evidence</span>
-                    <span>Target: ${esc(ch.artifactName)}</span>
-                </div>
-                <iframe class="tool-frame" src="/terminal/" title="Terminal for ${esc(ch.title)}"></iframe>
-            </div>
+            ${toolHtml}
 
-            <!-- Controls: Evidence Download + Submit Input -->
             <div class="action-row">
                 <a class="btn" href="/evidence/${esc(ch.artifactName)}" download>
                     Download evidence (${esc(ch.artifactName)})
@@ -720,6 +745,16 @@
             </div>
         </div>`;
     }).join('');
+
+    // Preload text into SIEM and Email raw views
+    list.forEach(ch => {
+        fetch('/evidence/' + ch.artifactName)
+            .then(r => r.text())
+            .then(txt => {
+                if ($('siem-raw-' + ch.id)) $('siem-raw-' + ch.id).textContent = txt;
+                if ($('email-raw-' + ch.id)) $('email-raw-' + ch.id).textContent = txt;
+            }).catch(() => {});
+    });
 }
         $('challenge-list').addEventListener('click', async e => {
             const b = e.target.closest('[data-lab]'); if (!b) return;

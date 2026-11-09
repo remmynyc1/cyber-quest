@@ -1,0 +1,6 @@
+2026-11-09T02:40:11Z 192.168.12.130 ceo_exec AUTH_FAILED invalid_credential
+2026-11-09T02:40:12Z 192.168.12.130 cfo_exec AUTH_FAILED invalid_credential
+2026-11-09T02:40:14Z 192.168.12.130 cto_exec AUTH_FAILED invalid_credential
+2026-11-09T02:40:15Z 192.168.12.130 vp_eng AUTH_FAILED invalid_credential
+2026-11-09T02:41:01Z 10.0.2.14 analyst_1 AUTH_SUCCESS ok
+2026-11-09T02:41:22Z 192.168.12.130 vp_sales AUTH_FAILED invalid_credential

@@ -1,0 +1,13 @@
+Delivered-To: operative@cyberquest.internal
+Received: by 2002:a05:6e02:1484 with SMTP id; Mon, 09 Nov 2026 02:15:20 -0500
+Received: from mail-relay.perimeter-spoof.org (mail-relay.perimeter-spoof.org. [198.51.100.99])
+        by mx.cyberquest.internal with ESMTP id q12si340898
+        for <operative@cyberquest.internal>; Mon, 09 Nov 2026 02:15:19 -0500
+Authentication-Results: mx.cyberquest.internal;
+       spf=softfail (cyberquest.internal: domain of admin@gateway-perimeter.com does not designate 198.51.100.99 as permitted sender) smtp.mailfrom=admin@gateway-perimeter.com;
+From: "Perimeter Admin" <admin@gateway-perimeter.com>
+To: operative@cyberquest.internal
+Subject: Critical Action Required: Re-verify Domain Credentials
+Date: Mon, 09 Nov 2026 02:15:18 -0500
+
+Please verify your account credentials immediately at http://gateway-perimeter-auth.com.

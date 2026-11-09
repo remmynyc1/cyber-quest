@@ -1,0 +1,13 @@
+# Snort / Suricata Perimeter IDS Alert Log
+[**] [1:1000023:2] ET SCAN Potential Unencrypted Remote Admin Telnet Probe [**]
+[Classification: Attempted Information Leak] [Priority: 2]
+2026-11-09T03:14:02.102341 198.51.100.44:51221 -> 10.0.8.1:23
+TCP TTL:64 TOS:0x0 ID:41221 IpLen:20 DgmLen:60 DF
+***A**** Seq: 0x12A9B1C Ack: 0x0 Win: 0x7210 TcpLen: 40
+
+Gateway port reconnaissance summary:
+PORT     STATE    SERVICE  REASON
+21/tcp   closed   ftp      reset
+22/tcp   open     ssh      syn-ack
+23/tcp   open     telnet   syn-ack (unencrypted legacy administrative port targeted)
+80/tcp   open     http     syn-ack

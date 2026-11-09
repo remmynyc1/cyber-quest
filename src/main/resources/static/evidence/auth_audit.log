@@ -1,0 +1,6 @@
+Nov 09 02:11:04 bastion sshd[2841]: Failed password for invalid user admin from 203.0.113.88 port 41221 ssh2
+Nov 09 02:11:06 bastion sshd[2843]: Failed password for root from 203.0.113.88 port 41224 ssh2
+Nov 09 02:11:08 bastion sshd[2845]: Failed password for invalid user test from 203.0.113.88 port 41228 ssh2
+Nov 09 02:11:10 bastion sshd[2849]: Failed password for root from 203.0.113.88 port 41230 ssh2
+Nov 09 02:11:12 bastion sshd[2852]: Failed password for invalid user oracle from 203.0.113.88 port 41235 ssh2
+Nov 09 02:12:01 bastion sshd[2901]: Accepted publickey for operative from 10.0.1.50 port 50122 ssh2

@@ -18,6 +18,10 @@ RUN curl -sLo /ttyd https://github.com/tsl0922/ttyd/releases/download/${TTYD_VER
 FROM debian:bookworm-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Copy the clean session launcher into the container
+COPY lab/lab-session.sh /usr/local/bin/lab-session.sh
+RUN chmod 755 /usr/local/bin/lab-session.sh
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jre-headless \
     nginx \

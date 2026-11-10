@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+echo "Starting Nmap 7.94 ( https://nmap.org ) at $(date)"
+if [[ "$*" == *"10.0.8.1"* ]] || [[ "$*" == *"23"* ]] || [[ "$#" -eq 0 ]]; then
+    cat /home/questuser/evidence/telnet_probe_alert.txt 2>/dev/null || cat ./telnet_probe_alert.txt 2>/dev/null
+else
+    echo "Nmap scan report for host $1"
+    echo "Host is up (0.0012s latency)."
+    echo "All 1000 scanned ports on $1 are closed (filtered for lab safety)."
+fi

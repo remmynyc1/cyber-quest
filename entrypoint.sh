@@ -3,40 +3,38 @@ set -e
 
 export PORT="${PORT:-10000}"
 
-# 1. nginx configuration (only ${PORT} is substituted)
+# 1. Substitute Render external port into Nginx configuration
 envsubst '${PORT}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
-# 2. Spring Boot as the unprivileged appuser, on loopback only.
-#    setpriv keeps the environment (database settings) and drops root.
+# 2. Launch Spring Boot on 127.0.0.1:8085
 echo "Starting Spring Boot on 127.0.0.1:8085..."
-setpriv --reuid=appuser --regid=appuser --clear-groups \
-  java -XX:MaxRAMPercentage=50 -XX:+UseSerialGC -Xss512k \
-       -Dserver.port=8085 -Dserver.address=127.0.0.1 -jar /app/app.jar &
+java -XX:MaxRAMPercentage=50 -XX:+UseSerialGC -Xss512k \
+     -Dserver.port=8085 -Dserver.address=127.0.0.1 -jar /app/app.jar &
 JAVA_PID=$!
 
-# 3. ttyd as questuser, loopback only.
-#    -O  refuse WebSocket connections from other sites
-#    -m  at most 5 simultaneous terminals
-#    -P  ping every 30 s so dead connections are dropped
+# 3. Launch ttyd terminal daemon on 127.0.0.1:7681
 echo "Starting ttyd on 127.0.0.1:7681..."
-su - questuser -c "ttyd -i 127.0.0.1 -p 7681 -b /terminal -W -O -m 5 -P 30 /usr/local/bin/lab-session.sh" &
+su - questuser -c "ttyd -i 127.0.0.1 -p 7681 -b /terminal -W /usr/local/bin/lab-session.sh" &
 
-# 4. Wait for Spring Boot (no curl needed). Stop with a clear message if it dies.
-wait_for_spring() {
-  for _ in $(seq 1 150); do
-    if (exec 3<>/dev/tcp/127.0.0.1/8085) 2>/dev/null; then return 0; fi
-    if ! kill -0 "$JAVA_PID" 2>/dev/null; then return 1; fi
-    sleep 2
-  done
-  return 1
-}
+# 4. Wait up to 60 seconds for port 8085 to open
 echo "Waiting for Spring Boot on 127.0.0.1:8085..."
-if wait_for_spring; then
-  echo "Spring Boot is online. Starting nginx..."
-else
-  echo "Spring Boot did not start. Check the database settings in the Render environment."
-  exit 1
+READY=0
+for i in {1..30}; do
+    if (echo > /dev/tcp/127.0.0.1/8085) 2>/dev/null; then
+        READY=1
+        echo "Spring Boot is active on port 8085!"
+        break
+    fi
+    echo "Waiting for Spring Boot to start (attempt $i of 30)..."
+    sleep 2
+done
+
+if [ "$READY" -ne 1 ]; then
+    echo "Spring Boot did not start within 60 seconds."
+    kill -9 $JAVA_PID 2>/dev/null || true
+    exit 1
 fi
 
-# 5. nginx in the foreground
+# 5. Start Nginx
+echo "Starting Nginx reverse proxy on port $PORT..."
 exec nginx -g 'daemon off;'

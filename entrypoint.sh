@@ -19,13 +19,13 @@ su - questuser -c "ttyd -i 127.0.0.1 -p 7681 -b /terminal -W /usr/local/bin/lab-
 # 4. Wait up to 60 seconds for port 8085 to open
 echo "Waiting for Spring Boot on 127.0.0.1:8085..."
 READY=0
-for i in {1..30}; do
+for i in {1..75}; do
     if (echo > /dev/tcp/127.0.0.1/8085) 2>/dev/null; then
         READY=1
         echo "Spring Boot is active on port 8085!"
         break
     fi
-    echo "Waiting for Spring Boot to start (attempt $i of 30)..."
+    echo "Waiting for Spring Boot to start (attempt $i of 75)..."
     sleep 2
 done
 

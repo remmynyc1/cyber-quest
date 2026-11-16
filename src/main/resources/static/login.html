@@ -33,22 +33,32 @@
         }
         button:hover { filter: brightness(1.08); box-shadow: 0 0 14px var(--cyan-glow); }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .error-banner {
-            background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.4); color: var(--red);
+        .error-banner, .success-banner {
             padding: 10px 12px; border-radius: 6px; font-size: 13px; line-height: 1.4; margin-bottom: 16px; display: none;
         }
+        .error-banner {
+            background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.4); color: var(--red);
+        }
+        .success-banner {
+            background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.4); color: var(--green);
+        }
+        .toggle-row { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
+        .toggle-row a { color: var(--cyan); cursor: pointer; text-decoration: none; font-weight: 600; }
+        .toggle-row a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <main class="box">
-        <h1>CYBER QUEST // DEFENSE ACCESS</h1>
-        <p>SOC Telemetry &amp; Defensive Range Gateway</p>
+        <h1 id="formTitle">CYBER QUEST // DEFENSE ACCESS</h1>
+        <p id="formSubtitle">SOC Telemetry &amp; Defensive Range Gateway</p>
 
         <div id="errorBanner" class="error-banner" role="alert">
             Sign-in failed. Check your email and password. After 5 failed attempts an account is locked for 15 minutes.
         </div>
+        <div id="successBanner" class="success-banner" role="status"></div>
 
-        <form action="/login" method="post">
+        <!-- Login Form -->
+        <form id="loginForm" action="/login" method="post">
             <label for="username">Work email</label>
             <input id="username" type="text" name="username" placeholder="name@cyberquest.internal" autocomplete="username" required autofocus>
 
@@ -57,11 +67,87 @@
 
             <button type="submit">Sign in</button>
         </form>
+
+        <!-- Self-Registration Form (Hidden by Default) -->
+        <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
+            <label for="regFullName">Full Name</label>
+            <input id="regFullName" type="text" placeholder="Marcus Vance" required>
+
+            <label for="regEmail">Work Email</label>
+            <input id="regEmail" type="email" placeholder="m.vance@cyberquest.internal" required>
+
+            <label for="regPassword">Password (12+ chars, letters & numbers)</label>
+            <input id="regPassword" type="password" placeholder="••••••••••••" required>
+
+            <button type="submit">Register Operative Account</button>
+        </form>
+
+        <div class="toggle-row">
+            <span id="toggleText">Need an account? <a onclick="toggleForm()">Register here</a></span>
+        </div>
     </main>
 
+    <script src="/common.js"></script>
     <script>
+        let isRegistering = false;
+
         if (window.location.search.includes('error')) {
             document.getElementById('errorBanner').style.display = 'block';
+        }
+
+        function toggleForm() {
+            isRegistering = !isRegistering;
+            document.getElementById('errorBanner').style.display = 'none';
+            document.getElementById('successBanner').style.display = 'none';
+
+            if (isRegistering) {
+                document.getElementById('formTitle').innerText = 'OPERATIVE ONBOARDING';
+                document.getElementById('formSubtitle').innerText = 'Create a new trainee account to access missions';
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('toggleText').innerHTML = 'Already have an account? <a onclick="toggleForm()">Sign in</a>';
+            } else {
+                document.getElementById('formTitle').innerText = 'CYBER QUEST // DEFENSE ACCESS';
+                document.getElementById('formSubtitle').innerText = 'SOC Telemetry & Defensive Range Gateway';
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('toggleText').innerHTML = 'Need an account? <a onclick="toggleForm()">Register here</a>';
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const errorBanner = document.getElementById('errorBanner');
+            const successBanner = document.getElementById('successBanner');
+            errorBanner.style.display = 'none';
+            successBanner.style.display = 'none';
+
+            const payload = {
+                fullName: document.getElementById('regFullName').value.trim(),
+                email: document.getElementById('regEmail').value.trim(),
+                password: document.getElementById('regPassword').value
+            };
+
+            try {
+                const response = await fetch('/api/users/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    successBanner.innerText = data.message || 'Account created successfully. Redirecting to sign in...';
+                    successBanner.style.display = 'block';
+                    setTimeout(() => { toggleForm(); }, 1500);
+                } else {
+                    errorBanner.innerText = data.message || 'Registration failed.';
+                    errorBanner.style.display = 'block';
+                }
+            } catch (err) {
+                errorBanner.innerText = 'Network error connecting to registration server.';
+                errorBanner.style.display = 'block';
+            }
         }
     </script>
 </body>

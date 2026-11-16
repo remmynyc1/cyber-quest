@@ -17,31 +17,46 @@
             justify-content: center; padding: 20px;
         }
         :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
-        .box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; padding: 28px; width: 100%; max-width: 420px; }
-        h1 { margin: 0 0 6px; font-size: 20px; font-weight: 700; color: var(--cyan); }
-        p { color: var(--text-muted); font-size: 13px; margin: 0 0 18px; line-height: 1.4; }
-        label { display: block; font-size: 12px; color: var(--text-muted); margin: 12px 0 4px; }
+        .box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 100%; max-width: 440px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); }
+        h1 { margin: 0 0 6px; font-size: 20px; font-weight: 700; color: var(--cyan); letter-spacing: 0.5px; }
+        p { color: var(--text-muted); font-size: 13px; margin: 0 0 20px; line-height: 1.4; }
+        label { display: block; font-size: 12px; color: var(--text-muted); margin: 12px 0 4px; font-weight: 600; }
+        .input-wrapper { position: relative; }
         input {
             width: 100%; background: #080c14; border: 1px solid var(--border); color: var(--text-main);
             border-radius: 6px; padding: 10px 12px; font-size: 14px; transition: border-color 0.15s ease;
         }
         input:focus { border-color: var(--cyan); outline: none; }
-        button {
-            width: 100%; margin-top: 18px; background: var(--cyan); color: #04121c; border: none;
-            border-radius: 6px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer;
+        .toggle-password {
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 0; margin: 0; width: auto;
+        }
+        .toggle-password:hover { color: var(--cyan); filter: none; box-shadow: none; }
+        button[type="submit"] {
+            width: 100%; margin-top: 20px; background: var(--cyan); color: #04121c; border: none;
+            border-radius: 6px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
             transition: filter 0.15s ease, box-shadow 0.15s ease;
         }
-        button:hover { filter: brightness(1.08); box-shadow: 0 0 14px var(--cyan-glow); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button[type="submit"]:hover { filter: brightness(1.08); box-shadow: 0 0 14px var(--cyan-glow); }
+        
+        /* Quick Demo Fill Buttons */
+        .demo-section { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+        .demo-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 600; text-align: center; }
+        .demo-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-demo {
+            background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); color: var(--cyan);
+            padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; transition: background 0.15s ease;
+        }
+        .btn-demo:hover { background: rgba(56, 189, 248, 0.18); }
+
+        .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+        .checkbox-row input { width: auto; cursor: pointer; }
+
         .error-banner, .success-banner {
             padding: 10px 12px; border-radius: 6px; font-size: 13px; line-height: 1.4; margin-bottom: 16px; display: none;
         }
-        .error-banner {
-            background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.4); color: var(--red);
-        }
-        .success-banner {
-            background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.4); color: var(--green);
-        }
+        .error-banner { background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.4); color: var(--red); }
+        .success-banner { background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.4); color: var(--green); }
         .toggle-row { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
         .toggle-row a { color: var(--cyan); cursor: pointer; text-decoration: none; font-weight: 600; }
         .toggle-row a:hover { text-decoration: underline; }
@@ -58,14 +73,21 @@
         <div id="successBanner" class="success-banner" role="status"></div>
 
         <!-- Login Form -->
-        <form id="loginForm" action="/login" method="post">
+        <form id="loginForm" action="/login" method="post" onsubmit="setLoading(true)">
             <label for="username">Work email</label>
             <input id="username" type="text" name="username" placeholder="name@cyberquest.internal" autocomplete="username" required autofocus>
 
             <label for="password">Password</label>
-            <input id="password" type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+            <div class="input-wrapper">
+                <input id="password" type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+                <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">Show</button>
+            </div>
 
-            <button type="submit">Sign in</button>
+            <label class="checkbox-row">
+                <input type="checkbox" name="remember-me" checked> Remember this device for 2 weeks
+            </label>
+
+            <button type="submit" id="submitBtn">Sign in</button>
         </form>
 
         <!-- Self-Registration Form (Hidden by Default) -->
@@ -77,22 +99,75 @@
             <input id="regEmail" type="email" placeholder="m.vance@cyberquest.internal" required>
 
             <label for="regPassword">Password (12+ chars, letters & numbers)</label>
-            <input id="regPassword" type="password" placeholder="••••••••••••" required>
+            <div class="input-wrapper">
+                <input id="regPassword" type="password" placeholder="••••••••••••" required>
+                <button type="button" class="toggle-password" onclick="toggleRegPasswordVisibility()">Show</button>
+            </div>
 
-            <button type="submit">Register Operative Account</button>
+            <button type="submit" id="regSubmitBtn">Register Operative Account</button>
         </form>
 
         <div class="toggle-row">
             <span id="toggleText">Need an account? <a onclick="toggleForm()">Register here</a></span>
         </div>
+
+        <!-- Quick Demo Fill Section (Only visible on login view) -->
+        <div id="demoSection" class="demo-section">
+            <div class="demo-label">⚡ Quick Demo Access</div>
+            <div class="demo-buttons">
+                <button type="button" class="btn-demo" onclick="fillDemo('employee')">👤 Trainee Demo</button>
+                <button type="button" class="btn-demo" onclick="fillDemo('manager')">🛡️ Manager Demo</button>
+            </div>
+        </div>
     </main>
 
-    <script src="/common.js"></script>
     <script>
         let isRegistering = false;
 
         if (window.location.search.includes('error')) {
             document.getElementById('errorBanner').style.display = 'block';
+        }
+
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('password');
+            const btn = event.target;
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                btn.innerText = 'Hide';
+            } else {
+                pwd.type = 'password';
+                btn.innerText = 'Show';
+            }
+        }
+
+        function toggleRegPasswordVisibility() {
+            const pwd = document.getElementById('regPassword');
+            const btn = event.target;
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                btn.innerText = 'Hide';
+            } else {
+                pwd.type = 'password';
+                btn.innerText = 'Show';
+            }
+        }
+
+        function fillDemo(role) {
+            if (role === 'employee') {
+                document.getElementById('username').value = 'employee@cyberquest.internal';
+                document.getElementById('password').value = 'Password123!';
+            } else if (role === 'manager') {
+                document.getElementById('username').value = 'manager@cyberquest.internal';
+                document.getElementById('password').value = 'Password123!';
+            }
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('submitBtn');
+            if (loading) {
+                btn.innerText = 'Authenticating...';
+                btn.disabled = true;
+            }
         }
 
         function toggleForm() {
@@ -105,12 +180,14 @@
                 document.getElementById('formSubtitle').innerText = 'Create a new trainee account to access missions';
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('demoSection').style.display = 'none';
                 document.getElementById('toggleText').innerHTML = 'Already have an account? <a onclick="toggleForm()">Sign in</a>';
             } else {
                 document.getElementById('formTitle').innerText = 'CYBER QUEST // DEFENSE ACCESS';
                 document.getElementById('formSubtitle').innerText = 'SOC Telemetry & Defensive Range Gateway';
                 document.getElementById('registerForm').style.display = 'none';
                 document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('demoSection').style.display = 'block';
                 document.getElementById('toggleText').innerHTML = 'Need an account? <a onclick="toggleForm()">Register here</a>';
             }
         }
@@ -119,8 +196,11 @@
             event.preventDefault();
             const errorBanner = document.getElementById('errorBanner');
             const successBanner = document.getElementById('successBanner');
+            const regBtn = document.getElementById('regSubmitBtn');
             errorBanner.style.display = 'none';
             successBanner.style.display = 'none';
+            regBtn.innerText = 'Creating Account...';
+            regBtn.disabled = true;
 
             const payload = {
                 fullName: document.getElementById('regFullName').value.trim(),
@@ -139,14 +219,18 @@
                 if (response.ok) {
                     successBanner.innerText = data.message || 'Account created successfully. Redirecting to sign in...';
                     successBanner.style.display = 'block';
-                    setTimeout(() => { toggleForm(); }, 1500);
+                    setTimeout(() => { toggleForm(); regBtn.innerText = 'Register Operative Account'; regBtn.disabled = false; }, 1500);
                 } else {
                     errorBanner.innerText = data.message || 'Registration failed.';
                     errorBanner.style.display = 'block';
+                    regBtn.innerText = 'Register Operative Account';
+                    regBtn.disabled = false;
                 }
             } catch (err) {
                 errorBanner.innerText = 'Network error connecting to registration server.';
                 errorBanner.style.display = 'block';
+                regBtn.innerText = 'Register Operative Account';
+                regBtn.disabled = false;
             }
         }
     </script>

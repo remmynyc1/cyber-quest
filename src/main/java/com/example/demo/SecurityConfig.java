@@ -79,6 +79,10 @@ public class SecurityConfig {
                 .failureUrl("/login.html?error")
                 .permitAll()
             )
+            .rememberMe(remember -> remember
+                .key("cyberQuestSecureKey2026")
+                .tokenValiditySeconds(1209600)
+        )
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login.html")

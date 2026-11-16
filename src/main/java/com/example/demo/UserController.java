@@ -76,4 +76,28 @@ public class UserController {
             return ResponseEntity.ok().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
     }
+@PostMapping("/register")
+    public ResponseEntity selfRegister(@Valid @RequestBody Dtos.SelfRegisterRequest req) {
+        String email = req.email().trim().toLowerCase();
+        if (userRepository.existsByEmail(email)) {
+            return ResponseEntity.status(409).body(m("message", "That email is already registered."));
+        }
+        
+        // Optional: Add policy check if you want self-registration to enforce strict passwords
+        String problem = AccountController.policyProblem(req.password(), "", email);
+        if (problem != null) {
+            return ResponseEntity.badRequest().body(m("message", problem));
+        }
+
+        UserAccount u = new UserAccount();
+        u.setFullName(req.fullName().trim());
+        u.setEmail(email);
+        u.setRole("ROLE_EMPLOYEE");
+        u.setPasswordHash(passwordEncoder.encode(req.password()));
+        u.setEnrolledInStarterQuest(true);
+        u.setMustChangePassword(false);
+        u = userRepository.save(u);
+
+        return ResponseEntity.ok(m("status", "SUCCESS", "message", "Account created successfully. You may now log in."));
+    }
 }

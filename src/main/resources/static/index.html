@@ -267,6 +267,11 @@
                 document.getElementById('totalUsers').innerText = users.length;
                 document.getElementById('lastUpdated').innerText = 'Synced: ' + new Date().toLocaleTimeString();
             } catch (err) { console.error(err); }
+            <td>
+        <button class="btn-neutralize" onclick="resetProgress(${Number(user.id)})">Reset progress</button>
+        <button class="btn-neutralize" onclick="resetPassword(${Number(user.id)})">Reset password</button>
+        <button class="btn-delete" onclick="deleteUser(${Number(user.id)})">Remove</button>
+    </td>
         }
 
         async function loadIncidentLogs() {
@@ -402,6 +407,16 @@
 
         function refreshAll() { loadUsers(); loadIncidentLogs(); loadLeaderboard(); checkAnomalyStatus(); }
         document.addEventListener('DOMContentLoaded', () => { refreshAll(); setInterval(refreshAll, 5000); });
+        async function resetProgress(id) {
+            if (!confirm(`Are you sure you want to wipe all XP and completed challenges for Agent #${id}?`)) return;
+            const response = await fetch(`/api/users/${id}/reset-progress`, { method: 'POST' });
+            if (response.ok) {
+                alert('Agent progress has been successfully reset.');
+                loadUsers();
+            } else {
+                alert('Failed to reset progress.');
+            }
+        }
     </script>
 </body>
 </html>

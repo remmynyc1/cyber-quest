@@ -65,4 +65,17 @@ public void setFailedLoginAttempts(int v) { this.failedLoginAttempts = v; }
 public LocalDateTime getLockedUntil() { return lockedUntil; }
 public void setLockedUntil(LocalDateTime v) { this.lockedUntil = v; }
 
+// Add these fields to UserAccount.java
+@Column(name = "otp_code")
+private String otpCode;
+
+@Column(name = "otp_expiry")
+private LocalDateTime otpExpiry;
+
+// Getters and Setters
+public String getOtpCode() { return otpCode; }
+public void setOtpCode(String otpCode) { this.otpCode = otpCode; }
+public LocalDateTime getOtpExpiry() { return otpExpiry; }
+public void setOtpExpiry(LocalDateTime otpExpiry) { this.otpExpiry = otpExpiry; }
+
 }

@@ -100,4 +100,24 @@ public class UserController {
 
         return ResponseEntity.ok(m("status", "SUCCESS", "message", "Account created successfully. You may now log in."));
     }
+    @PostMapping("/demo-signup")
+    public ResponseEntity createDemoAccount(@RequestBody Map<String, String> payload) {
+        String roleType = payload.getOrDefault("role", "EMPLOYEE").toUpperCase();
+        String role = "ROLE_MANAGER".equals(roleType) ? "ROLE_MANAGER" : "ROLE_EMPLOYEE";
+        String prefix = "ROLE_MANAGER".equals(roleType) ? "manager-demo-" : "trainee-demo-";
+        String email = prefix + System.currentTimeMillis() + "@cyberquest.internal";
+        String fullName = "ROLE_MANAGER".equals(roleType) ? "Demo Supervisor" : "Demo Trainee";
+        String password = "Password123!";
+
+        UserAccount u = new UserAccount();
+        u.setFullName(fullName);
+        u.setEmail(email);
+        u.setRole(role);
+        u.setPasswordHash(passwordEncoder.encode(password));
+        u.setEnrolledInStarterQuest(true);
+        u.setMustChangePassword(false);
+        userRepository.save(u);
+
+        return ResponseEntity.ok(Map.of("email", email, "password", password));
+    }
 }

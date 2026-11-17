@@ -102,6 +102,7 @@
     <header>
         <div class="brand">
             <h1>CYBER QUEST // SOC DASHBOARD</h1>
+            <div id="userRoleBadge"></div>
             <span class="badge-live">● Active Ingestion</span>
         </div>
         <div class="header-actions">
@@ -113,7 +114,7 @@
 
     <div class="metrics-row">
         <div class="metric-card">
-            <div class="metric-label">Enrolled Agents</div>
+            <div class="metric-label">Enrolled Employees</div>
             <div class="metric-value" id="totalUsers">-</div>
         </div>
         <div class="metric-card">
@@ -134,7 +135,7 @@
         <div>
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Active Personnel & Ingested Agents</span>
+                    <span class="card-title">Active Personnel & Ingested Employees</span>
                     <span class="subtitle" id="lastUpdated">Synced just now</span>
                 </div>
                 <table>
@@ -215,7 +216,7 @@
             </div>
 
             <div class="card">
-                <span class="card-title">Enroll Agent (Manual)</span>
+                <span class="card-title">Enroll Employees (Manual)</span>
                 <form id="addUserForm" onsubmit="createUser(event)" style="margin-top: 16px;">
                     <div class="form-group">
                         <label>Full Name</label>

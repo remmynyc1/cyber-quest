@@ -152,13 +152,31 @@
             }
         }
 
-        function fillDemo(role) {
-            if (role === 'employee') {
-                document.getElementById('username').value = 'employee@cyberquest.internal';
-                document.getElementById('password').value = 'Password123!';
-            } else if (role === 'manager') {
-                document.getElementById('username').value = 'manager@cyberquest.internal';
-                document.getElementById('password').value = 'Password123!';
+      async function fillDemo(roleType) {
+            const btn = event.target;
+            btn.innerText = 'Creating fresh demo...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/users/demo-signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: roleType })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('username').value = data.email;
+                    document.getElementById('password').value = data.password;
+                    // Automatically submit login form with the fresh credentials
+                    document.getElementById('loginForm').submit();
+                } else {
+                    alert('Could not generate demo account.');
+                    btn.innerText = roleType === 'employee' ? '👤 Trainee Demo' : '🛡️ Manager Demo';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert('Error connecting to demo server.');
+                btn.disabled = false;
             }
         }
 

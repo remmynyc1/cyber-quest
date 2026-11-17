@@ -51,7 +51,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                .ignoringRequestMatchers("/login", "/api/users/register"))
+                .ignoringRequestMatchers("/login", "/api/users/register","/api/users/demo-signup","/api/auth/otp/**","/logout"))
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
             .headers(h -> h.contentSecurityPolicy(csp -> csp.policyDirectives(
                 "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
@@ -61,11 +61,12 @@ public class SecurityConfig {
                         org.springframework.http.HttpStatus.UNAUTHORIZED),
                 request -> request.getRequestURI().startsWith("/api/")))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login.html", "/login", "/error", "/favicon.ico", "/common.js", "/api/users/register").permitAll()
+                .requestMatchers("/login.html", "/login", "/error", "/favicon.ico", "/common.js", "/api/users/register","/api/users/demo-signup","/api/auth/otp/**","/css/**","/js/**").permitAll()
                 .requestMatchers("/index.html", "/training.html", "/api/users/**", "/api/dashboard/**",
                                  "/api/training/**", "/api/threats/**").hasRole("MANAGER")
                 .requestMatchers("/employee.html", "/api/quest/**", "/api/sim/**")
                     .hasAnyRole("EMPLOYEE", "ANALYST", "MANAGER")
+                .requestMatchers("/api/quest/terminal-auth").authenticated()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

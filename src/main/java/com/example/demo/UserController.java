@@ -102,11 +102,13 @@ public class UserController {
     }
     @PostMapping("/demo-signup")
     public ResponseEntity createDemoAccount(@RequestBody Map<String, String> payload) {
-        String roleType = payload.getOrDefault("role", "EMPLOYEE").toUpperCase();
-        String role = "ROLE_MANAGER".equals(roleType) ? "ROLE_MANAGER" : "ROLE_EMPLOYEE";
-        String prefix = "ROLE_MANAGER".equals(roleType) ? "manager-demo-" : "trainee-demo-";
+        String roleType = payload.getOrDefault("role", "employee").trim().toLowerCase();
+        
+        boolean isManager = roleType.equals("manager");
+        String role = isManager ? "ROLE_MANAGER" : "ROLE_EMPLOYEE";
+        String prefix = isManager ? "manager-demo-" : "trainee-demo-";
         String email = prefix + System.currentTimeMillis() + "@cyberquest.internal";
-        String fullName = "ROLE_MANAGER".equals(roleType) ? "Demo Supervisor" : "Demo Trainee";
+        String fullName = isManager ? "Demo Supervisor" : "Demo Trainee";
         String password = "Password123!";
 
         UserAccount u = new UserAccount();
@@ -119,5 +121,14 @@ public class UserController {
         userRepository.save(u);
 
         return ResponseEntity.ok(Map.of("email", email, "password", password));
+    }
+    @PostMapping("/{id}/reset-progress")
+    public ResponseEntity resetProgress(@PathVariable Long id) {
+        return userRepository.findById(id).map(u -> {
+            u.setTotalXp(0);
+            u.getCompletedChallengeIds().clear();
+            userRepository.save(u);
+            return ResponseEntity.ok(m("message", "Progress reset successfully."));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

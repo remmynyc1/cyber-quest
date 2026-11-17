@@ -293,6 +293,14 @@
         if (res.ok) {
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
+        
+        if (data.debugCode) {
+            const notice = document.getElementById('otpNotice');
+            if (notice) {
+                notice.innerHTML = 'Code sent! <strong style="color:var(--cyan);">(Test Code: ${data.debugCode})</strong>';
+            }
+        }
+        
         } else {
             alert(data.message || 'Could not send code.');
         }

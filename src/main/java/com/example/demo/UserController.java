@@ -122,13 +122,30 @@ public class UserController {
 
         return ResponseEntity.ok(Map.of("email", email, "password", password));
     }
-    @PostMapping("/{id}/reset-progress")
+   
+@PostMapping("/{id}/reset-progress")
     public ResponseEntity resetProgress(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
-            u.getCompletedChallengeIds().clear();
+            if (u.getCompletedChallengeIds() != null) {
+                u.getCompletedChallengeIds().clear();
+            }
             userRepository.save(u);
-            return ResponseEntity.ok(m("message", "Progress reset successfully."));
+            return ResponseEntity.ok(m("message", "Progress and completed challenges reset successfully."));
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/reset-all-progress")
+    public ResponseEntity resetAllProgress() {
+        List<UserAccount> users = userRepository.findAll();
+        for (UserAccount u : users) {
+            // Optional: Protect managers from getting wiped if desired, or wipe everyone except admins
+            u.setTotalXp(0);
+            if (u.getCompletedChallengeIds() != null) {
+                u.getCompletedChallengeIds().clear();
+            }
+        }
+        userRepository.saveAll(users);
+        return ResponseEntity.ok(m("message", "All operative progress and completed challenges have been globally reset."));
     }
 }

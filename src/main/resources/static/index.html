@@ -205,6 +205,13 @@
                     </div>
                 </div>
 
+                <div class="card">
+    <span class="card-title">Global Range Controls</span>
+    <div style="margin-top: 14px;">
+        <button class="btn-delete" style="width: 100%; padding: 10px;" onclick="resetAllProgress()">⚠️ Global Reset: Wipe All Operative Progress</button>
+    </div>
+</div>  
+
                 <div style="margin-top: 14px;">
                     <label>Optical Capture Input (Hex Key)</label>
                     <div style="display: flex; gap: 8px; margin-top: 6px;">
@@ -412,6 +419,18 @@
                 alert('Failed to reset progress.');
             }
         }
+
+        async function resetAllProgress() {
+    if (!confirm('DANGER: This will wipe XP and completed challenges for EVERY operative across Cyber Quest. Proceed?')) return;
+    const response = await fetch('/api/users/reset-all-progress', { method: 'POST' });
+    if (response.ok) {
+        alert('Global range reset complete.');
+        loadUsers();
+        loadLeaderboard();
+    } else {
+        alert('Failed to execute global reset.');
+    }
+}
     </script>
 </body>
 </html>

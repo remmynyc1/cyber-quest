@@ -78,4 +78,10 @@ public void setOtpCode(String otpCode) { this.otpCode = otpCode; }
 public LocalDateTime getOtpExpiry() { return otpExpiry; }
 public void setOtpExpiry(LocalDateTime otpExpiry) { this.otpExpiry = otpExpiry; }
 
+@Column(name = "phone_number")
+private String phoneNumber;
+// Getter and Setter
+public String getPhoneNumber() { return phoneNumber; }
+public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
 }

@@ -242,7 +242,7 @@
 
     <script src="/common.js"></script>
     <script>
-        async function loadUsers() {
+       async function loadUsers() {
             try {
                 const response = await fetch('/api/users');
                 if (!response.ok) return;
@@ -258,6 +258,7 @@
                         <td><span class="role-pill">${esc(user.role || 'ROLE_USER')}</span></td>
                         <td><span class="${user.enrolledInStarterQuest ? 'quest-active' : 'quest-inactive'}">${user.enrolledInStarterQuest ? '● Enrolled' : '○ Pending'}</span></td>
                         <td>
+                            <button class="btn-neutralize" onclick="resetProgress(${Number(user.id)})">Reset progress</button>
                             <button class="btn-neutralize" onclick="resetPassword(${Number(user.id)})">Reset password</button>
                             <button class="btn-delete" onclick="deleteUser(${Number(user.id)})">Remove</button>
                         </td>
@@ -267,13 +268,7 @@
                 document.getElementById('totalUsers').innerText = users.length;
                 document.getElementById('lastUpdated').innerText = 'Synced: ' + new Date().toLocaleTimeString();
             } catch (err) { console.error(err); }
-            <td>
-        <button class="btn-neutralize" onclick="resetProgress(${Number(user.id)})">Reset progress</button>
-        <button class="btn-neutralize" onclick="resetPassword(${Number(user.id)})">Reset password</button>
-        <button class="btn-delete" onclick="deleteUser(${Number(user.id)})">Remove</button>
-    </td>
         }
-
         async function loadIncidentLogs() {
             try {
                 const response = await fetch('/api/dashboard/logs');

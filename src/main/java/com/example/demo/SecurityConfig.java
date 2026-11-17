@@ -60,15 +60,13 @@ public class SecurityConfig {
                 new org.springframework.security.web.authentication.HttpStatusEntryPoint(
                         org.springframework.http.HttpStatus.UNAUTHORIZED),
                 request -> request.getRequestURI().startsWith("/api/")))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login.html", "/login", "/error", "/favicon.ico", "/common.js", "/api/users/register","/api/users/demo-signup","/api/auth/otp/**","/css/**","/js/**").permitAll()
-                .requestMatchers("/index.html", "/training.html", "/api/users/**", "/api/dashboard/**",
-                                 "/api/training/**", "/api/threats/**").hasRole("MANAGER")
-                .requestMatchers("/employee.html", "/api/quest/**", "/api/sim/**")
-                    .hasAnyRole("EMPLOYEE", "ANALYST", "MANAGER")
-                .requestMatchers("/api/quest/terminal-auth").authenticated()
-                .anyRequest().authenticated()
-            )
+         .authorizeHttpRequests(auth -> auth
+    .requestMatchers("/login.html", "/login", "/error", "/favicon.ico", "/common.js", "/api/users/register", "/api/users/demo-signup", "/api/auth/otp/**", "/css/**", "/js/**").permitAll()
+    .requestMatchers("/api/quest/terminal-auth").authenticated() // <-- Must be authenticated
+    .requestMatchers("/index.html", "/training.html", "/api/users/**", "/api/dashboard/**", "/api/training/**", "/api/threats/**").hasRole("MANAGER")
+    .requestMatchers("/employee.html", "/api/quest/**", "/api/sim/**").hasAnyRole("EMPLOYEE", "ANALYST", "MANAGER")
+    .anyRequest().authenticated()
+)
             .formLogin(form -> form
                 .loginPage("/login.html")
                 .loginProcessingUrl("/login")

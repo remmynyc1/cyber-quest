@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 import java.util.Map;
@@ -33,11 +35,12 @@ public class UserController {
 }
 
 private void clearUserAttempts(Long userId, String email) {
+    String safeEmail = email != null ? email : "";
     try {
         List  cols = jdbcTemplate.queryForList(
-          "SELECT table_name, column_name FROM information_schema.columns " +
+         "SELECT table_name, column_name FROM information_schema.columns " +
             "WHERE table_schema = 'public' " +
-            "AND column_name IN ('user_id', 'user_account_id', 'account_id', 'employee_id', 'trainee_id', 'user_email', 'email', 'username') " +
+            "AND column_name IN ('user_id', 'user_account_id', 'account_id', 'employee_id', 'trainee_id', 'learner_id', 'member_id', 'student_id', 'participant_id', 'owner_id', 'user_email', 'email', 'username') " +
             "AND table_name <> 'user_account' AND table_name <> 'users'"
         );
         for (Object item : cols) {
@@ -47,10 +50,11 @@ if (item instanceof Map<?, ?> row) {
                 if (tableObj != null && colObj != null) {
                     String table = tableObj.toString();
                     String col = colObj.toString();
-                    if (col.contains("email") || col.equals("username")) {
-                        jdbcTemplate.update("DELETE FROM " + table + " WHERE LOWER(" + col + ") = LOWER(?)", email);
-                    } else {
-                        jdbcTemplate.update("DELETE FROM " + table + " WHERE " + col + " = ?", userId);
+                    int deleted = (col.contains("email") || col.equals("username"))
+                        ? jdbcTemplate.update("DELETE FROM " + table + " WHERE LOWER(" + col + ") = LOWER(?)", safeEmail)
+                        : (userId != null ? jdbcTemplate.update("DELETE FROM " + table + " WHERE " + col + " = ?", userId) : 0);
+                    if (deleted > 0) {
+                        System.out.println("Cleared " + deleted + " rows from " + table + "." + col);
                     }
                 }
             }
@@ -85,7 +89,7 @@ if (item instanceof Map<?, ?> row) {
         return ResponseEntity.ok(m("id", u.getId(), "email", u.getEmail(), "tempPassword", temp));
     }
 
-    @PostMapping("/{id}/reset-password")
+    @PostMapping  ("/{id}/reset-password")
     public ResponseEntity resetPassword(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             String temp = Dtos.tempPassword();
@@ -155,7 +159,7 @@ if (item instanceof Map<?, ?> row) {
         return ResponseEntity.ok(Map.of("email", email, "password", password));
     }
 
-   @PostMapping("/{id}/reset-progress")
+   @PostMapping@Transactional ("/{id}/reset-progress")
     public ResponseEntity resetProgress(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
@@ -168,7 +172,7 @@ if (item instanceof Map<?, ?> row) {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/reset-all-progress")
+    @PostMapping@Transactional ("/reset-all-progress")
     public ResponseEntity resetAllProgress() {
         List<UserAccount> users = userRepository.findAll();
         for (UserAccount u : users) {

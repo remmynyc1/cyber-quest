@@ -32,23 +32,26 @@ public class UserController {
     this.jdbcTemplate = jdbcTemplate;
 }
 
-private void clearUserAttempts(Long userId) {
+private void clearUserAttempts(Long userId, String email) {
     try {
         List  cols = jdbcTemplate.queryForList(
-            "SELECT table_name, column_name FROM information_schema.columns " +
+          "SELECT table_name, column_name FROM information_schema.columns " +
             "WHERE table_schema = 'public' " +
-            "AND column_name IN ('user_id', 'user_account_id', 'account_id') " +
+            "AND column_name IN ('user_id', 'user_account_id', 'account_id', 'employee_id', 'trainee_id', 'user_email', 'email', 'username') " +
             "AND table_name <> 'user_account' AND table_name <> 'users'"
         );
         for (Object item : cols) {
-            if (item instanceof Map<?, ?> row) {
+if (item instanceof Map<?, ?> row) {
                 Object tableObj = row.get("table_name");
                 Object colObj = row.get("column_name");
                 if (tableObj != null && colObj != null) {
-                    jdbcTemplate.update(
-                        "DELETE FROM " + tableObj.toString() + " WHERE " + colObj.toString() + " = ?",
-                        userId
-                    );
+                    String table = tableObj.toString();
+                    String col = colObj.toString();
+                    if (col.contains("email") || col.equals("username")) {
+                        jdbcTemplate.update("DELETE FROM " + table + " WHERE LOWER(" + col + ") = LOWER(?)", email);
+                    } else {
+                        jdbcTemplate.update("DELETE FROM " + table + " WHERE " + col + " = ?", userId);
+                    }
                 }
             }
         }
@@ -56,7 +59,6 @@ private void clearUserAttempts(Long userId) {
         System.out.println("Attempt cleanup warning for user " + userId + ": " + ex.getMessage());
     }
 }
-
     @GetMapping
     public List<Dtos.UserView> getAllUsers() {
         return userRepository.findAll().stream().map(Dtos.UserView::of).toList();
@@ -161,7 +163,7 @@ private void clearUserAttempts(Long userId) {
                 u.getCompletedChallengeIds().clear();
             }
             userRepository.save(u);
-            clearUserAttempts(u.getId());
+            clearUserAttempts(u.getId(), u.getEmail());
             return ResponseEntity.ok(Map.of("message", "Progress and challenges reset successfully."));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -174,9 +176,29 @@ private void clearUserAttempts(Long userId) {
             if (u.getCompletedChallengeIds() != null) {
                 u.getCompletedChallengeIds().clear();
             }
-            clearUserAttempts(u.getId());
+            clearUserAttempts(u.getId(), u.getEmail());
         }
         userRepository.saveAll(users);
         return ResponseEntity.ok(Map.of("message", "All operative progress globally reset."));
     }
+    private void resetInboxStatus(Long userId, String email) {
+    try {
+        List inboxCols = jdbcTemplate.queryForList(
+            "SELECT table_name, column_name FROM information_schema.columns " +
+            "WHERE table_schema = 'public' " +
+            "AND table_name LIKE '%inbox%' " +
+            "AND column_name = 'status'"
+        );
+        for (Object item : inboxCols) {
+            if (item instanceof Map<?, ?> row) {
+                Object tableObj = row.get("table_name");
+                if (tableObj != null) {
+                    jdbcTemplate.update("UPDATE " + tableObj + " SET status = 'NEW'");
+                }
+            }
+        }
+    } catch (Exception ex) {
+        System.out.println("Inbox reset warning: " + ex.getMessage());
+    }
+}
 }

@@ -159,8 +159,9 @@ if (item instanceof Map<?, ?> row) {
         return ResponseEntity.ok(Map.of("email", email, "password", password));
     }
 
-   @PostMapping@Transactional ("/{id}/reset-progress")
-    public ResponseEntity resetProgress(@PathVariable Long id) {
+   @PostMapping("/{id}/reset-progress")
+   @Transactional  
+   public ResponseEntity resetProgress(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
             if (u.getCompletedChallengeIds() != null) {
@@ -172,7 +173,8 @@ if (item instanceof Map<?, ?> row) {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping@Transactional ("/reset-all-progress")
+    @PostMapping ("/reset-all-progress")
+    @Transactional 
     public ResponseEntity resetAllProgress() {
         List<UserAccount> users = userRepository.findAll();
         for (UserAccount u : users) {

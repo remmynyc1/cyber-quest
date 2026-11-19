@@ -33,17 +33,20 @@ public class UserController {
 }
 
 private void clearUserAttempts(Long userId) {
-    for (String sql : List.of(
-            "DELETE FROM sim_attempt WHERE user_id = ?",
-            "DELETE FROM sim_attempt WHERE user_account_id = ?",
-            "DELETE FROM quest_attempt WHERE user_id = ?",
-            "DELETE FROM challenge_attempt WHERE user_id = ?"
-    )) {
-        try {
-            jdbcTemplate.update(sql, userId);
-        } catch (Exception ex) {
-            System.out.println("Reset SQL skipped (" + sql + "): " + ex.getMessage());
+    try {
+        List> cols = jdbcTemplate.queryForList(
+            "SELECT table_name, column_name FROM information_schema.columns " +
+            "WHERE table_schema = 'public' " +
+            "AND column_name IN ('user_id', 'user_account_id', 'account_id') " +
+            "AND table_name <> 'user_account' AND table_name <> 'users'"
+        );
+        for (Map<String, Object> row : cols) {
+            String table = row.get("table_name").toString();
+            String col = row.get("column_name").toString();
+            jdbcTemplate.update("DELETE FROM " + table + " WHERE " + col + " = ?", userId);
         }
+    } catch (Exception ex) {
+        System.out.println("Attempt cleanup warning for user " + userId + ": " + ex.getMessage());
     }
 }
 
@@ -143,7 +146,7 @@ private void clearUserAttempts(Long userId) {
         return ResponseEntity.ok(Map.of("email", email, "password", password));
     }
 
-    @PostMapping("/{id}/reset-progress")
+   @PostMapping("/{id}/reset-progress")
     public ResponseEntity resetProgress(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
@@ -151,6 +154,7 @@ private void clearUserAttempts(Long userId) {
                 u.getCompletedChallengeIds().clear();
             }
             userRepository.save(u);
+            clearUserAttempts(u.getId());
             return ResponseEntity.ok(Map.of("message", "Progress and challenges reset successfully."));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -163,9 +167,9 @@ private void clearUserAttempts(Long userId) {
             if (u.getCompletedChallengeIds() != null) {
                 u.getCompletedChallengeIds().clear();
             }
+            clearUserAttempts(u.getId());
         }
         userRepository.saveAll(users);
         return ResponseEntity.ok(Map.of("message", "All operative progress globally reset."));
     }
-    
 }

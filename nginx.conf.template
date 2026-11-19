@@ -58,3 +58,5 @@ http {
             proxy_read_timeout 1800s;
             proxy_send_timeout 1800s;
         }
+    }
+}

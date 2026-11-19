@@ -34,13 +34,13 @@ public class UserController {
 
 private void clearUserAttempts(Long userId) {
     try {
-        List> cols = jdbcTemplate.queryForList(
+        List  cols = jdbcTemplate.queryForList(
             "SELECT table_name, column_name FROM information_schema.columns " +
             "WHERE table_schema = 'public' " +
             "AND column_name IN ('user_id', 'user_account_id', 'account_id') " +
             "AND table_name <> 'user_account' AND table_name <> 'users'"
         );
-        for (Map<String, Object> row : cols) {
+        for (Map<String, Object>  row : cols) {
             String table = row.get("table_name").toString();
             String col = row.get("column_name").toString();
             jdbcTemplate.update("DELETE FROM " + table + " WHERE " + col + " = ?", userId);

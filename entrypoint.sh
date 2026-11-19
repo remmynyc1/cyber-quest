@@ -16,9 +16,16 @@ JAVA_PID=$!
 echo "Starting ttyd on 127.0.0.1:7681..."
 # Start ttyd after Spring Boot is ready
 su -s /bin/bash questuser -c "ttyd -i 127.0.0.1 -p 7681 -b /terminal -W /usr/local/bin/lab-session.sh" > /tmp/ttyd.log 2>&1 &# 4. Wait up to 60 seconds for port 8085 to open
+
+# 4. Wait for port 8085 to open
 echo "Waiting for Spring Boot on 127.0.0.1:8085..."
 READY=0
 for i in {1..75}; do
+    if ! kill -0 $JAVA_PID 2>/dev/null; then
+        echo "Spring Boot exited unexpectedly before opening port 8085."
+        exit 1
+    fi
+    
     if (echo > /dev/tcp/127.0.0.1/8085) 2>/dev/null; then
         READY=1
         echo "Spring Boot is active on port 8085!"

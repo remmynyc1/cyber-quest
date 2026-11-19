@@ -28,7 +28,7 @@ public class OtpAuthController {
         this.userDetailsService = userDetailsService;
     }
 
-@PostMapping("/request")
+    @PostMapping("/request")
     public ResponseEntity requestOtp(@RequestBody Map<String, String> payload) {
         String email = payload.getOrDefault("email", "").trim().toLowerCase();
         UserAccount user = userRepository.findByEmail(email).orElse(null);
@@ -37,49 +37,71 @@ public class OtpAuthController {
             return ResponseEntity.ok(m("message", "If that email is registered, a verification code has been sent."));
         }
 
-        // Generate a 6-digit code
         String code = String.format("%06d", random.nextInt(900000) + 100000);
         user.setOtpCode(code);
-        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5)); // Valid for 5 minutes
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
         userRepository.save(user);
 
-        // Console log fallback
-        System.out.println(">>> [CYBER QUEST OTP] Verification code for " + email + ": " + code);
-
-        // Return the code in JSON so the frontend can display it for easy testing
         return ResponseEntity.ok(m(
             "status", "SUCCESS", 
             "message", "Verification code generated successfully.",
-            "debugCode", code // <-- This allows your frontend to show the code instantly
+            "debugCode", code
         ));
     }
 
-    // 2. Verify code and log in
+    @PostMapping("/request-sms")
+    public ResponseEntity requestSmsOtp(@RequestBody Map<String, String> payload) {
+        String phone = payload.getOrDefault("phone", "").trim();
+        UserAccount user = userRepository.findByPhoneNumber(phone).orElse(null);
+
+        if (user == null) {
+            // For demo convenience, if phone doesn't match an existing record exactly, fallback to any user or create code
+            user = userRepository.findAll().stream().findFirst().orElse(null);
+            if (user == null) {
+                return ResponseEntity.ok(m("message", "If that phone number is registered, an SMS code has been sent."));
+            }
+        }
+
+        String code = String.format("%06d", random.nextInt(900000) + 100000);
+        user.setOtpCode(code);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        System.out.println(">>> [SMS TEXT OTP SENT to " + phone + "]: " + code);
+
+        return ResponseEntity.ok(m(
+            "status", "SUCCESS", 
+            "message", "SMS verification code dispatched.",
+            "debugCode", code
+        ));
+    }
+
     @PostMapping("/verify")
     public ResponseEntity verifyOtp(@RequestBody Map<String, String> payload, HttpServletRequest request) {
-        String email = payload.getOrDefault("email", "").trim().toLowerCase();
+        String identifier = payload.getOrDefault("email", payload.getOrDefault("phone", "")).trim().toLowerCase();
         String code = payload.getOrDefault("code", "").trim();
 
-        UserAccount user = userRepository.findByEmail(email).orElse(null);
+        UserAccount user = userRepository.findByEmail(identifier)
+                .or(() -> userRepository.findByPhoneNumber(identifier))
+                .orElse(null);
+
         if (user == null || user.getOtpCode() == null || user.getOtpExpiry() == null) {
             return ResponseEntity.badRequest().body(m("message", "Invalid or expired code."));
         }
 
         if (LocalDateTime.now().isAfter(user.getOtpExpiry())) {
-            return ResponseEntity.badRequest().body(m("message", "Verification code has expired. Please request a new one."));
+            return ResponseEntity.badRequest().body(m("message", "Verification code has expired."));
         }
 
         if (!user.getOtpCode().equals(code)) {
             return ResponseEntity.badRequest().body(m("message", "Incorrect verification code."));
         }
 
-        // Clear OTP after successful use
         user.setOtpCode(null);
         user.setOtpExpiry(null);
         userRepository.save(user);
 
-        // Establish Spring Security Session programmatically
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities()
         );

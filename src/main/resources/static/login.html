@@ -123,6 +123,26 @@
                 <button type="button" class="btn-demo" onclick="fillDemo('manager')">🛡️ Manager Demo</button>
             </div>
         </div>
+        <!-- Code Login Form -->
+<form id="codeLoginForm" style="display: none;" onsubmit="handleCodeLogin(event)">
+    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+        <button type="button" id="tabEmail" class="btn-demo" style="flex:1; background:var(--cyan); color:#04121c;" onclick="switchOtpMethod('email')">Email Code</button>
+        <button type="button" id="tabSms" class="btn-demo" style="flex:1;" onclick="switchOtpMethod('sms')">SMS Text Code</button>
+    </div>
+
+    <div id="step1">
+        <label id="identifierLabel" for="codeIdentifier">Work email</label>
+        <input id="codeIdentifier" type="text" placeholder="name@cyberquest.internal" required>
+        <button type="button" onclick="requestOtpCode()">Send Verification Code</button>
+    </div>
+
+    <div id="step2" style="display: none;">
+        <p id="otpNotice" style="color: var(--green); font-size: 12px; margin-bottom: 10px;">✔ Code sent!</p>
+        <label for="otpCodeInput">Enter 6-Digit Code</label>
+        <input id="otpCodeInput" type="text" placeholder="123456" maxlength="6" required style="letter-spacing: 4px; font-size: 18px; text-align: center;">
+        <button type="submit">Verify &amp; Sign In</button>
+    </div>
+</form>
 
         <!-- Code Login Form (Hidden by Default) -->
 <form id="codeLoginForm" style="display: none;" onsubmit="handleCodeLogin(event)">
@@ -281,26 +301,25 @@
     }
 
     async function requestOtpCode() {
-        const email = document.getElementById('codeEmail').value.trim();
-        if (!email) return alert('Please enter your email address first.');
+        const val = document.getElementById('codeIdentifier').value.trim();
+        if (!val) return alert('Please enter your ' + (otpMethod === 'sms' ? 'phone number' : 'email') + ' first.');
 
-        const res = await fetch('/api/auth/otp/request', {
+        const endpoint = otpMethod === 'sms' ? '/api/auth/otp/request-sms' : '/api/auth/otp/request';
+        const payload = otpMethod === 'sms' ? { phone: val } : { email: val };
+
+        const res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+            body: JSON.stringify(payload)
         });
         const data = await res.json();
+        
         if (res.ok) {
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
-        
-        if (data.debugCode) {
-            const notice = document.getElementById('otpNotice');
-            if (notice) {
-                notice.innerHTML = 'Code sent! <strong style="color:var(--cyan);">(Test Code: ${data.debugCode})</strong>';
+            if (data.debugCode) {
+                document.getElementById('otpNotice').innerHTML = `✔ Code sent! <strong style="color:var(--cyan);">(Test Code: ${data.debugCode})</strong>`;
             }
-        }
-        
         } else {
             alert(data.message || 'Could not send code.');
         }
@@ -324,6 +343,34 @@
             alert(data.message || 'Verification failed.');
         }
     }
+   
+    let otpMethod = 'email';
+
+    function switchOtpMethod(method) {
+        otpMethod = method;
+        const label = document.getElementById('identifierLabel');
+        const input = document.getElementById('codeIdentifier');
+        const tabEmail = document.getElementById('tabEmail');
+        const tabSms = document.getElementById('tabSms');
+
+        if (method === 'sms') {
+            label.innerText = 'Mobile Phone Number';
+            input.type = 'tel';
+            input.placeholder = '+15555555555';
+            tabSms.style.background = 'var(--cyan)';
+            tabSms.style.color = '#04121c';
+            tabEmail.style.background = 'rgba(56, 189, 248, 0.08)';
+            tabEmail.style.color = 'var(--cyan)';
+        } else {
+            label.innerText = 'Work email';
+            input.type = 'email';
+            input.placeholder = 'name@cyberquest.internal';
+            tabEmail.style.background = 'var(--cyan)';
+            tabEmail.style.color = '#04121c';
+            tabSms.style.background = 'rgba(56, 189, 248, 0.08)';
+            tabSms.style.color = 'var(--cyan)';
+        }
+    } 
     </script>
 </body>
 </html>

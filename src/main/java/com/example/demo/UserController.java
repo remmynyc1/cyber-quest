@@ -31,9 +31,8 @@ public class UserController {
         return userRepository.findAll().stream().map(Dtos.UserView::of).toList();
     }
 
-    /** Creates an account with a one-time temporary password, shown once to the manager. */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createUser(@Valid @RequestBody Dtos.CreateUserRequest req) {
+    public ResponseEntity createUser(@Valid @RequestBody Dtos.CreateUserRequest req) {
         String email = req.email().trim().toLowerCase();
         if (!ALLOWED_ROLES.contains(req.role())) {
             return ResponseEntity.badRequest().body(m("message", "Unknown role."));
@@ -54,12 +53,12 @@ public class UserController {
     }
 
     @PostMapping("/{id}/reset-password")
-    public ResponseEntity<Map<String, Object>> resetPassword(@PathVariable Long id) {
+    public ResponseEntity resetPassword(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             String temp = Dtos.tempPassword();
             u.setPasswordHash(passwordEncoder.encode(temp));
             u.setMustChangePassword(true);
-            u.setFailedLoginAttempts(0);   // a reset also unlocks the account
+            u.setFailedLoginAttempts(0);
             u.setLockedUntil(null);
             userRepository.save(u);
             return ResponseEntity.ok(m("email", u.getEmail(), "tempPassword", temp));
@@ -70,20 +69,20 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication auth) {
         return userRepository.findById(id).map(u -> {
             if (u.getEmail().equalsIgnoreCase(auth.getName())) {
-                return ResponseEntity.status(409).<Void>build();   // cannot delete yourself
+                return ResponseEntity.status(409).<Void>build();
             }
             userRepository.deleteById(id);
             return ResponseEntity.ok().<Void>build();
         }).orElse(ResponseEntity.notFound().build());
     }
-@PostMapping("/register")
+
+    @PostMapping("/register")
     public ResponseEntity selfRegister(@Valid @RequestBody Dtos.SelfRegisterRequest req) {
         String email = req.email().trim().toLowerCase();
         if (userRepository.existsByEmail(email)) {
             return ResponseEntity.status(409).body(m("message", "That email is already registered."));
         }
         
-        // Optional: Add policy check if you want self-registration to enforce strict passwords
         String problem = AccountController.policyProblem(req.password(), "", email);
         if (problem != null) {
             return ResponseEntity.badRequest().body(m("message", problem));
@@ -100,10 +99,10 @@ public class UserController {
 
         return ResponseEntity.ok(m("status", "SUCCESS", "message", "Account created successfully. You may now log in."));
     }
+
     @PostMapping("/demo-signup")
     public ResponseEntity createDemoAccount(@RequestBody Map<String, String> payload) {
         String roleType = payload.getOrDefault("role", "employee").trim().toLowerCase();
-        
         boolean isManager = roleType.equals("manager");
         String role = isManager ? "ROLE_MANAGER" : "ROLE_EMPLOYEE";
         String prefix = isManager ? "manager-demo-" : "trainee-demo-";
@@ -122,8 +121,8 @@ public class UserController {
 
         return ResponseEntity.ok(Map.of("email", email, "password", password));
     }
-   
-@PostMapping("/{id}/reset-progress")
+
+    @PostMapping("/{id}/reset-progress")
     public ResponseEntity resetProgress(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
@@ -131,7 +130,7 @@ public class UserController {
                 u.getCompletedChallengeIds().clear();
             }
             userRepository.save(u);
-            return ResponseEntity.ok(m("message", "Progress and completed challenges reset successfully."));
+            return ResponseEntity.ok(Map.of("message", "Progress and challenges reset successfully."));
         }).orElse(ResponseEntity.notFound().build());
     }
 
@@ -139,13 +138,12 @@ public class UserController {
     public ResponseEntity resetAllProgress() {
         List<UserAccount> users = userRepository.findAll();
         for (UserAccount u : users) {
-            // Optional: Protect managers from getting wiped if desired, or wipe everyone except admins
             u.setTotalXp(0);
             if (u.getCompletedChallengeIds() != null) {
                 u.getCompletedChallengeIds().clear();
             }
         }
         userRepository.saveAll(users);
-        return ResponseEntity.ok(m("message", "All operative progress and completed challenges have been globally reset."));
+        return ResponseEntity.ok(Map.of("message", "All operative progress globally reset."));
     }
 }

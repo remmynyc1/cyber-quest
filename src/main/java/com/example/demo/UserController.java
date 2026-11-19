@@ -33,16 +33,16 @@ public class UserController {
 }
 
 private void clearUserAttempts(Long userId) {
-    // Adjust table names if your simulation/attempt tables use different names
     for (String sql : List.of(
             "DELETE FROM sim_attempt WHERE user_id = ?",
+            "DELETE FROM sim_attempt WHERE user_account_id = ?",
             "DELETE FROM quest_attempt WHERE user_id = ?",
             "DELETE FROM challenge_attempt WHERE user_id = ?"
     )) {
         try {
             jdbcTemplate.update(sql, userId);
-        } catch (Exception ignored) {
-            // Table may not exist in this schema
+        } catch (Exception ex) {
+            System.out.println("Reset SQL skipped (" + sql + "): " + ex.getMessage());
         }
     }
 }

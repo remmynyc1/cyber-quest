@@ -14,7 +14,7 @@ JAVA_PID=$!
 
 # 3. Launch ttyd terminal daemon on 127.0.0.1:7681
 echo "Starting ttyd on 127.0.0.1:7681..."
-su - questuser -c "ttyd -i 127.0.0.1 -p 7681 -b /terminal -W /usr/local/bin/lab-session.sh" &
+su -s /bin/bash questuser -c "ttyd -i 127.0.0.1 -p 7681 -b /terminal -W /usr/local/bin/lab-session.sh" &
 
 # 4. Wait up to 60 seconds for port 8085 to open
 echo "Waiting for Spring Boot on 127.0.0.1:8085..."

@@ -2,6 +2,7 @@ package com.example.demo;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +19,33 @@ public class UserController {
 
     private static final Set<String> ALLOWED_ROLES = Set.of("ROLE_EMPLOYEE", "ROLE_ANALYST", "ROLE_MANAGER");
 
+    private final JdbcTemplate jdbcTemplate;
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+   public UserController(UserRepository userRepository,
+                      PasswordEncoder passwordEncoder,
+                      JdbcTemplate jdbcTemplate) {
+    this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.jdbcTemplate = jdbcTemplate;
+}
+
+private void clearUserAttempts(Long userId) {
+    // Adjust table names if your simulation/attempt tables use different names
+    for (String sql : List.of(
+            "DELETE FROM sim_attempt WHERE user_id = ?",
+            "DELETE FROM quest_attempt WHERE user_id = ?",
+            "DELETE FROM challenge_attempt WHERE user_id = ?"
+    )) {
+        try {
+            jdbcTemplate.update(sql, userId);
+        } catch (Exception ignored) {
+            // Table may not exist in this schema
+        }
     }
+}
 
     @GetMapping
     public List<Dtos.UserView> getAllUsers() {
@@ -146,4 +167,5 @@ public class UserController {
         userRepository.saveAll(users);
         return ResponseEntity.ok(Map.of("message", "All operative progress globally reset."));
     }
+    
 }

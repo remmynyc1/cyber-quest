@@ -53,9 +53,9 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 .ignoringRequestMatchers("/login", "/api/users/register","/api/users/demo-signup","/api/auth/otp/**","/logout"))
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
-            .headers(h -> h.contentSecurityPolicy(csp -> csp.policyDirectives(
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
-                + "img-src 'self' data:; frame-ancestors 'none'; form-action 'self'")))
+       .headers(h -> h.contentSecurityPolicy(csp -> csp.policyDirectives(
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+    + "img-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'self'; form-action 'self'")))
             .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(
                 new org.springframework.security.web.authentication.HttpStatusEntryPoint(
                         org.springframework.http.HttpStatus.UNAUTHORIZED),

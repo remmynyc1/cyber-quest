@@ -40,10 +40,17 @@ private void clearUserAttempts(Long userId) {
             "AND column_name IN ('user_id', 'user_account_id', 'account_id') " +
             "AND table_name <> 'user_account' AND table_name <> 'users'"
         );
-        for (Map<String, Object>  row : cols) {
-            String table = row.get("table_name").toString();
-            String col = row.get("column_name").toString();
-            jdbcTemplate.update("DELETE FROM " + table + " WHERE " + col + " = ?", userId);
+        for (Object item : cols) {
+            if (item instanceof Map<?, ?> row) {
+                Object tableObj = row.get("table_name");
+                Object colObj = row.get("column_name");
+                if (tableObj != null && colObj != null) {
+                    jdbcTemplate.update(
+                        "DELETE FROM " + tableObj.toString() + " WHERE " + colObj.toString() + " = ?",
+                        userId
+                    );
+                }
+            }
         }
     } catch (Exception ex) {
         System.out.println("Attempt cleanup warning for user " + userId + ": " + ex.getMessage());

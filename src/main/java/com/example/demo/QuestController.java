@@ -42,7 +42,13 @@ public class QuestController {
     public List<QuestChallenge> getAvailableChallenges() {
         return challengeRepository.findAll();
     }
-
+  @GetMapping("/terminal-auth")
+public ResponseEntity<Void> terminalAuth(Authentication auth) {
+    if (auth == null || !auth.isAuthenticated()) {
+        return ResponseEntity.status(401).build();
+    }
+    return ResponseEntity.ok().build();
+}
     @PostMapping("/challenges/{id}/submit")
     public ResponseEntity<Map<String, Object>> submitSolution(
             @PathVariable Long id,

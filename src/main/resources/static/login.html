@@ -31,15 +31,14 @@
             position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
             background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; padding: 0; margin: 0; width: auto;
         }
-        .toggle-password:hover { color: var(--cyan); filter: none; box-shadow: none; }
-        button[type="submit"] {
+        .toggle-password:hover { color: var(--cyan); }
+        button[type="submit"], .btn-primary {
             width: 100%; margin-top: 20px; background: var(--cyan); color: #04121c; border: none;
             border-radius: 6px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
             transition: filter 0.15s ease, box-shadow 0.15s ease;
         }
-        button[type="submit"]:hover { filter: brightness(1.08); box-shadow: 0 0 14px var(--cyan-glow); }
-        
-        /* Quick Demo Fill Buttons */
+        button[type="submit"]:hover, .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 0 14px var(--cyan-glow); }
+
         .demo-section { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
         .demo-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 600; text-align: center; }
         .demo-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -72,7 +71,7 @@
         </div>
         <div id="successBanner" class="success-banner" role="status"></div>
 
-        <!-- Login Form -->
+        <!-- Password Login Form -->
         <form id="loginForm" action="/login" method="post" onsubmit="setLoading(true)">
             <label for="username">Work email</label>
             <input id="username" type="text" name="username" placeholder="name@cyberquest.internal" autocomplete="username" required autofocus>
@@ -80,7 +79,7 @@
             <label for="password">Password</label>
             <div class="input-wrapper">
                 <input id="password" type="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
-                <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">Show</button>
+                <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">Show</button>
             </div>
 
             <label class="checkbox-row">
@@ -89,12 +88,33 @@
 
             <button type="submit" id="submitBtn">Sign in</button>
         </form>
-<div style="margin-top: 10px; text-align: center;">
-    <a onclick="toggleAuthMode()" id="authModeToggle" style="color: var(--cyan); cursor: pointer; font-size: 13px; font-weight: 600;">
-        ⚡ Sign in with a verification code instead
-    </a>
-</div>
-        <!-- Self-Registration Form (Hidden by Default) -->
+
+        <!-- One-Time Code (OTP) Login Form -->
+        <form id="codeLoginForm" style="display: none;" onsubmit="handleCodeLogin(event)">
+            <div id="step1">
+                <label for="codeEmail">Work email</label>
+                <input id="codeEmail" type="email" placeholder="name@cyberquest.internal" required>
+                <button type="button" class="btn-primary" id="sendOtpBtn" onclick="requestOtpCode()">Send Verification Code</button>
+            </div>
+
+            <div id="step2" style="display: none;">
+                <p id="otpNotice" style="color: var(--green); font-size: 12px; margin-bottom: 10px;">✔ Code sent! Check your email.</p>
+                <label for="otpCodeInput">Enter 6-Digit Code</label>
+                <input id="otpCodeInput" type="text" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="letter-spacing: 6px; font-size: 20px; text-align: center; font-family: monospace;">
+                <button type="submit" id="verifyOtpBtn">Verify &amp; Sign In</button>
+                <div class="toggle-row" style="margin-top: 12px;">
+                    <a onclick="resetOtpSteps()">Use a different email / Resend</a>
+                </div>
+            </div>
+        </form>
+
+        <div id="authModeWrapper" style="margin-top: 14px; text-align: center;">
+            <a onclick="toggleAuthMode()" id="authModeToggle" style="color: var(--cyan); cursor: pointer; font-size: 13px; font-weight: 600;">
+                ⚡ Sign in with a one-time code instead
+            </a>
+        </div>
+
+        <!-- Self-Registration Form -->
         <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
             <label for="regFullName">Full Name</label>
             <input id="regFullName" type="text" placeholder="Marcus Vance" required>
@@ -102,10 +122,10 @@
             <label for="regEmail">Work Email</label>
             <input id="regEmail" type="email" placeholder="m.vance@cyberquest.internal" required>
 
-            <label for="regPassword">Password (12+ chars, letters & numbers)</label>
+            <label for="regPassword">Password (8+ chars, letters &amp; numbers)</label>
             <div class="input-wrapper">
-                <input id="regPassword" type="password" placeholder="••••••••••••" required>
-                <button type="button" class="toggle-password" onclick="toggleRegPasswordVisibility()">Show</button>
+                <input id="regPassword" type="password" placeholder="••••••••" required>
+                <button type="button" class="toggle-password" onclick="toggleRegPasswordVisibility(this)">Show</button>
             </div>
 
             <button type="submit" id="regSubmitBtn">Register Operative Account</button>
@@ -115,88 +135,38 @@
             <span id="toggleText">Need an account? <a onclick="toggleForm()">Register here</a></span>
         </div>
 
-        <!-- Quick Demo Fill Section (Only visible on login view) -->
         <div id="demoSection" class="demo-section">
             <div class="demo-label">⚡ Quick Demo Access</div>
             <div class="demo-buttons">
-                <button type="button" class="btn-demo" onclick="fillDemo('employee')">👤 Trainee Demo</button>
-                <button type="button" class="btn-demo" onclick="fillDemo('manager')">🛡️ Manager Demo</button>
+                <button type="button" class="btn-demo" onclick="fillDemo('employee', this)">👤 Trainee Demo</button>
+                <button type="button" class="btn-demo" onclick="fillDemo('manager', this)">🛡️ Manager Demo</button>
             </div>
         </div>
-        <!-- Code Login Form -->
-<form id="codeLoginForm" style="display: none;" onsubmit="handleCodeLogin(event)">
-    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-        <button type="button" id="tabEmail" class="btn-demo" style="flex:1; background:var(--cyan); color:#04121c;" onclick="switchOtpMethod('email')">Email Code</button>
-        <button type="button" id="tabSms" class="btn-demo" style="flex:1;" onclick="switchOtpMethod('sms')">SMS Text Code</button>
-    </div>
-
-    <div id="step1">
-        <label id="identifierLabel" for="codeIdentifier">Work email</label>
-        <input id="codeIdentifier" type="text" placeholder="name@cyberquest.internal" required>
-        <button type="button" onclick="requestOtpCode()">Send Verification Code</button>
-    </div>
-
-    <div id="step2" style="display: none;">
-        <p id="otpNotice" style="color: var(--green); font-size: 12px; margin-bottom: 10px;">✔ Code sent!</p>
-        <label for="otpCodeInput">Enter 6-Digit Code</label>
-        <input id="otpCodeInput" type="text" placeholder="123456" maxlength="6" required style="letter-spacing: 4px; font-size: 18px; text-align: center;">
-        <button type="submit">Verify &amp; Sign In</button>
-    </div>
-</form>
-
-        <!-- Code Login Form (Hidden by Default) -->
-<form id="codeLoginForm" style="display: none;" onsubmit="handleCodeLogin(event)">
-    <div id="step1">
-        <label for="codeEmail">Work email</label>
-        <input id="codeEmail" type="email" placeholder="name@cyberquest.internal" required>
-        <button type="button" onclick="requestOtpCode()">Send Verification Code</button>
-    </div>
-
-    <div id="step2" style="display: none;">
-        <p style="color: var(--green); font-size: 12px; margin-bottom: 10px;">✔ Code sent! Check your email (or server console).</p>
-        <label for="otpCodeInput">Enter 6-Digit Code</label>
-        <input id="otpCodeInput" type="text" placeholder="123456" maxlength="6" required style="letter-spacing: 4px; font-size: 18px; text-align: center;">
-        <button type="submit">Verify &amp; Sign In</button>
-    </div>
-</form>
     </main>
 
     <script>
         let isRegistering = false;
+        let isCodeMode = false;
 
         if (window.location.search.includes('error')) {
             document.getElementById('errorBanner').style.display = 'block';
         }
 
-        function togglePasswordVisibility() {
+        function togglePasswordVisibility(btn) {
             const pwd = document.getElementById('password');
-            const btn = event.target;
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                btn.innerText = 'Hide';
-            } else {
-                pwd.type = 'password';
-                btn.innerText = 'Show';
-            }
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+            btn.innerText = pwd.type === 'password' ? 'Show' : 'Hide';
         }
 
-        function toggleRegPasswordVisibility() {
+        function toggleRegPasswordVisibility(btn) {
             const pwd = document.getElementById('regPassword');
-            const btn = event.target;
-            if (pwd.type === 'password') {
-                pwd.type = 'text';
-                btn.innerText = 'Hide';
-            } else {
-                pwd.type = 'password';
-                btn.innerText = 'Show';
-            }
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+            btn.innerText = pwd.type === 'password' ? 'Show' : 'Hide';
         }
 
-      async function fillDemo(roleType) {
-            const btn = event.target;
+        async function fillDemo(roleType, btn) {
             btn.innerText = 'Creating fresh demo...';
             btn.disabled = true;
-
             try {
                 const res = await fetch('/api/users/demo-signup', {
                     method: 'POST',
@@ -207,7 +177,6 @@
                 if (res.ok) {
                     document.getElementById('username').value = data.email;
                     document.getElementById('password').value = data.password;
-                    // Automatically submit login form with the fresh credentials
                     document.getElementById('loginForm').submit();
                 } else {
                     alert('Could not generate demo account.');
@@ -228,6 +197,89 @@
             }
         }
 
+        function toggleAuthMode() {
+            isCodeMode = !isCodeMode;
+            document.getElementById('errorBanner').style.display = 'none';
+            document.getElementById('successBanner').style.display = 'none';
+            document.getElementById('loginForm').style.display = isCodeMode ? 'none' : 'block';
+            document.getElementById('codeLoginForm').style.display = isCodeMode ? 'block' : 'none';
+            document.getElementById('authModeToggle').innerText = isCodeMode
+                ? '🔒 Sign in with password instead'
+                : '⚡ Sign in with a one-time code instead';
+            if (isCodeMode) resetOtpSteps();
+        }
+
+        function resetOtpSteps() {
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+            document.getElementById('otpCodeInput').value = '';
+        }
+
+        async function requestOtpCode() {
+            const email = document.getElementById('codeEmail').value.trim();
+            if (!email) return alert('Please enter your work email first.');
+            const btn = document.getElementById('sendOtpBtn');
+            btn.innerText = 'Sending code...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/otp/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('step1').style.display = 'none';
+                    document.getElementById('step2').style.display = 'block';
+                    if (data.demoCode) {
+                        document.getElementById('otpNotice').innerHTML =
+                            `✔ Demo Token Issued: <strong style="color:var(--cyan); font-family:monospace; font-size:15px;">${data.demoCode}</strong>`;
+                    } else {
+                        document.getElementById('otpNotice').innerText =
+                            '✔ ' + (data.message || 'Check your email for the 6-digit code.');
+                    }
+                    document.getElementById('otpCodeInput').focus();
+                } else {
+                    alert(data.message || 'Could not send verification code.');
+                }
+            } catch (e) {
+                alert('Network error requesting verification code.');
+            } finally {
+                btn.innerText = 'Send Verification Code';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleCodeLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('codeEmail').value.trim();
+            const code = document.getElementById('otpCodeInput').value.trim();
+            const btn = document.getElementById('verifyOtpBtn');
+            btn.innerText = 'Verifying...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/auth/otp/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code })
+                });
+                const data = await res.json();
+                if (res.ok && data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.message || 'Invalid or expired code.');
+                    btn.innerText = 'Verify & Sign In';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert('Error verifying code.');
+                btn.innerText = 'Verify & Sign In';
+                btn.disabled = false;
+            }
+        }
+
         function toggleForm() {
             isRegistering = !isRegistering;
             document.getElementById('errorBanner').style.display = 'none';
@@ -237,14 +289,19 @@
                 document.getElementById('formTitle').innerText = 'OPERATIVE ONBOARDING';
                 document.getElementById('formSubtitle').innerText = 'Create a new trainee account to access missions';
                 document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('codeLoginForm').style.display = 'none';
+                document.getElementById('authModeWrapper').style.display = 'none';
                 document.getElementById('registerForm').style.display = 'block';
                 document.getElementById('demoSection').style.display = 'none';
                 document.getElementById('toggleText').innerHTML = 'Already have an account? <a onclick="toggleForm()">Sign in</a>';
             } else {
+                isCodeMode = false;
                 document.getElementById('formTitle').innerText = 'CYBER QUEST // DEFENSE ACCESS';
                 document.getElementById('formSubtitle').innerText = 'SOC Telemetry & Defensive Range Gateway';
                 document.getElementById('registerForm').style.display = 'none';
                 document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('authModeWrapper').style.display = 'block';
+                document.getElementById('authModeToggle').innerText = '⚡ Sign in with a one-time code instead';
                 document.getElementById('demoSection').style.display = 'block';
                 document.getElementById('toggleText').innerHTML = 'Need an account? <a onclick="toggleForm()">Register here</a>';
             }
@@ -291,90 +348,6 @@
                 regBtn.disabled = false;
             }
         }
-        let isCodeMode = false;
-
-    function toggleAuthMode() {
-        isCodeMode = !isCodeMode;
-        document.getElementById('loginForm').style.display = isCodeMode ? 'none' : 'block';
-        document.getElementById('codeLoginForm').style.display = isCodeMode ? 'block' : 'none';
-        document.getElementById('authModeToggle').innerText = isCodeMode ? '🔒 Sign in with password instead' : '⚡ Sign in with a verification code instead';
-    }
-
-    async function requestOtpCode() {
-        const val = document.getElementById('codeIdentifier').value.trim();
-        if (!val) return alert('Please enter your ' + (otpMethod === 'sms' ? 'phone number' : 'email') + ' first.');
-
-        const endpoint = otpMethod === 'sms' ? '/api/auth/otp/request-sms' : '/api/auth/otp/request';
-        const payload = otpMethod === 'sms' ? { phone: val } : { email: val };
-
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-            document.getElementById('step1').style.display = 'none';
-            document.getElementById('step2').style.display = 'block';
-            if (data.debugCode) {
-                document.getElementById('otpNotice').innerHTML = `✔ Code sent! <strong style="color:var(--cyan);">(Test Code: ${data.debugCode})</strong>`;
-            }
-        } else {
-            alert(data.message || 'Could not send code.');
-        }
-    }
-
-   async function handleCodeLogin(event) {
-    event.preventDefault();
-    const val = document.getElementById('codeIdentifier').value.trim();
-    const code = document.getElementById('otpCodeInput').value.trim();
-
-    const payload = otpMethod === 'sms'
-        ? { phone: val, code }
-        : { email: val, code };
-
-    const res = await fetch('/api/auth/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-
-    if (res.ok && data.redirect) {
-        window.location.href = data.redirect;
-    } else {
-        alert(data.message || 'Verification failed.');
-    }
-}
-   
-    let otpMethod = 'email';
-
-    function switchOtpMethod(method) {
-        otpMethod = method;
-        const label = document.getElementById('identifierLabel');
-        const input = document.getElementById('codeIdentifier');
-        const tabEmail = document.getElementById('tabEmail');
-        const tabSms = document.getElementById('tabSms');
-
-        if (method === 'sms') {
-            label.innerText = 'Mobile Phone Number';
-            input.type = 'tel';
-            input.placeholder = '+15555555555';
-            tabSms.style.background = 'var(--cyan)';
-            tabSms.style.color = '#04121c';
-            tabEmail.style.background = 'rgba(56, 189, 248, 0.08)';
-            tabEmail.style.color = 'var(--cyan)';
-        } else {
-            label.innerText = 'Work email';
-            input.type = 'email';
-            input.placeholder = 'name@cyberquest.internal';
-            tabEmail.style.background = 'var(--cyan)';
-            tabEmail.style.color = '#04121c';
-            tabSms.style.background = 'rgba(56, 189, 248, 0.08)';
-            tabSms.style.color = 'var(--cyan)';
-        }
-    } 
     </script>
 </body>
 </html>

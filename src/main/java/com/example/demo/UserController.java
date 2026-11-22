@@ -161,21 +161,20 @@ if (item instanceof Map<?, ?> row) {
 
    @PostMapping("/{id}/reset-progress")
    @Transactional  
-   public ResponseEntity resetProgress(@PathVariable Long id) {
+   public ResponseEntity<?> resetProgress(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
             if (u.getCompletedChallengeIds() != null) {
                 u.getCompletedChallengeIds().clear();
             }
-            userRepository.save(u);
+            userRepository.saveAndFlush(u);
             clearUserAttempts(u.getId(), u.getEmail());
             return ResponseEntity.ok(Map.of("message", "Progress and challenges reset successfully."));
         }).orElse(ResponseEntity.notFound().build());
     }
-
-    @PostMapping ("/reset-all-progress")
+   @PostMapping("/reset-all-progress")
     @Transactional 
-    public ResponseEntity resetAllProgress() {
+    public ResponseEntity<?> resetAllProgress() {
         List<UserAccount> users = userRepository.findAll();
         for (UserAccount u : users) {
             u.setTotalXp(0);
@@ -185,8 +184,10 @@ if (item instanceof Map<?, ?> row) {
             clearUserAttempts(u.getId(), u.getEmail());
         }
         userRepository.saveAll(users);
+        userRepository.flush();
         return ResponseEntity.ok(Map.of("message", "All operative progress globally reset."));
     }
+    
     private void resetInboxStatus(Long userId, String email) {
     try {
         List inboxCols = jdbcTemplate.queryForList(

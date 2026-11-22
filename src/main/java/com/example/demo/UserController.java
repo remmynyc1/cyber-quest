@@ -21,19 +21,26 @@ public class UserController {
 
     private static final Set<String> ALLOWED_ROLES = Set.of("ROLE_EMPLOYEE", "ROLE_ANALYST", "ROLE_MANAGER");
 
-    private final JdbcTemplate jdbcTemplate;
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JdbcTemplate jdbcTemplate;
+    private final SimulationAttemptRepository simulationAttemptRepository;
+    private final PhishDeliveryRepository phishDeliveryRepository;
+    private final PhishCampaignRepository phishCampaignRepository;
 
-   public UserController(UserRepository userRepository,
-                      PasswordEncoder passwordEncoder,
-                      JdbcTemplate jdbcTemplate) {
-    this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
-    this.jdbcTemplate = jdbcTemplate;
-}
-
+    public UserController(UserRepository userRepository,
+                          PasswordEncoder passwordEncoder,
+                          JdbcTemplate jdbcTemplate,
+                          SimulationAttemptRepository simulationAttemptRepository,
+                          PhishDeliveryRepository phishDeliveryRepository,
+                          PhishCampaignRepository phishCampaignRepository) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jdbcTemplate = jdbcTemplate;
+        this.simulationAttemptRepository = simulationAttemptRepository;
+        this.phishDeliveryRepository = phishDeliveryRepository;
+        this.phishCampaignRepository = phishCampaignRepository;
+    }
 private void clearUserAttempts(Long userId, String email) {
     String safeEmail = email != null ? email : "";
     try {
@@ -160,19 +167,30 @@ if (item instanceof Map<?, ?> row) {
     }
 
    @PostMapping("/{id}/reset-progress")
-   @Transactional  
-   public ResponseEntity<?> resetProgress(@PathVariable Long id) {
+    @Transactional  
+    public ResponseEntity<?> resetProgress(@PathVariable Long id) {
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
             if (u.getCompletedChallengeIds() != null) {
                 u.getCompletedChallengeIds().clear();
             }
             userRepository.saveAndFlush(u);
-            clearUserAttempts(u.getId(), u.getEmail());
+
+            // Delete all training module attempts and phishing deliveries for this specific user
+            String email = u.getEmail();
+            simulationAttemptRepository.findAll().stream()
+                .filter(a -> email.equalsIgnoreCase(a.getUserEmail()))
+                .forEach(simulationAttemptRepository::delete);
+
+            phishDeliveryRepository.findAll().stream()
+                .filter(d -> email.equalsIgnoreCase(d.getUserEmail()))
+                .forEach(phishDeliveryRepository::delete);
+
             return ResponseEntity.ok(Map.of("message", "Progress and challenges reset successfully."));
         }).orElse(ResponseEntity.notFound().build());
     }
-   @PostMapping("/reset-all-progress")
+
+    @PostMapping("/reset-all-progress")
     @Transactional 
     public ResponseEntity<?> resetAllProgress() {
         List<UserAccount> users = userRepository.findAll();
@@ -181,13 +199,18 @@ if (item instanceof Map<?, ?> row) {
             if (u.getCompletedChallengeIds() != null) {
                 u.getCompletedChallengeIds().clear();
             }
-            clearUserAttempts(u.getId(), u.getEmail());
         }
         userRepository.saveAll(users);
         userRepository.flush();
+
+        // Wipe all training attempts, phishing deliveries, and launched campaigns globally
+        simulationAttemptRepository.deleteAllInBatch();
+        phishDeliveryRepository.deleteAllInBatch();
+        phishCampaignRepository.deleteAllInBatch();
+
         return ResponseEntity.ok(Map.of("message", "All operative progress globally reset."));
     }
-    
+
     private void resetInboxStatus(Long userId, String email) {
     try {
         List inboxCols = jdbcTemplate.queryForList(

@@ -52,7 +52,7 @@ public class AccountController {
 
     /** Returns a human-readable problem, or null when the password is acceptable. */
     static String policyProblem(String pw, String current, String email) {
-        if (pw.length() < 12) return "Use at least 12 characters.";
+        if (pw.length() < 8) return "Use at least 8 characters.";
         if (pw.getBytes(StandardCharsets.UTF_8).length > 72) return "That password is too long (72 bytes maximum).";
         if (!pw.matches(".*[A-Za-z].*") || !pw.matches(".*\\d.*")) return "Include at least one letter and one number.";
         if (pw.equals(current)) return "Choose a password different from your current one.";

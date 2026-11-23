@@ -10,7 +10,7 @@
             --text-muted: #94a3b8; --cyan: #38bdf8; --cyan-glow: rgba(56, 189, 248, 0.25);
             --green: #4ade80; --red: #f87171; --orange: #fbbf24;
         }
-        *{ box-sizing: border-box; }
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: var(--bg-dark);
             color: var(--text-main); margin: 0; padding: 24px; line-height: 1.5; min-height: 100vh;
@@ -51,8 +51,7 @@
             border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.15s ease;
         }
         .btn-neutralize:hover { background: rgba(251, 191, 36, 0.22); }
-        .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        @media (max-width: 900px) { .metrics-row { grid-template-columns: repeat(2, 1fr); } }
+        .metrics-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
         @media (max-width: 540px) { .metrics-row { grid-template-columns: 1fr; } }
         .metric-card {
             background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px;
@@ -125,7 +124,7 @@
             <div class="metric-label">Target Threat Key</div>
             <div class="metric-value" style="color: #E63946;">#E63946</div>
         </div>
-        <div class="metric-card" style ="display:none;" >
+        <div class="metric-card" style="display: none;">
             <div class="metric-label">Sandbox Firewall</div>
             <div class="metric-value status-green">● pfSense Online</div>
         </div>
@@ -135,7 +134,7 @@
         <div>
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Active Personnel & Employees</span>
+                    <span class="card-title">Active Personnel &amp; Employees</span>
                     <span class="subtitle" id="lastUpdated">Synced just now</span>
                 </div>
                 <table>
@@ -152,7 +151,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Live SOC Threat & Infiltration Feed</span>
+                    <span class="card-title">Live SOC Threat &amp; Infiltration Feed</span>
                     <span class="subtitle">Real-time Triage</span>
                 </div>
                 <table>
@@ -205,13 +204,6 @@
                     </div>
                 </div>
 
-                <div class="card">
-    <span class="card-title">Global Range Controls</span>
-    <div style="margin-top: 14px;">
-        <button class="btn-delete" style="width: 100%; padding: 10px;" onclick="resetAllProgress()">⚠️ Global Reset: Wipe All Operative Progress</button>
-    </div>
-</div>  
-
                 <div style="margin-top: 14px;">
                     <label>Optical Capture Input (Hex Key)</label>
                     <div style="display: flex; gap: 8px; margin-top: 6px;">
@@ -219,6 +211,13 @@
                         <button class="btn-primary" onclick="submitOpticalKey()">Mitigate</button>
                     </div>
                     <div id="anomaly-status-msg" style="font-size: 12px; margin-top: 8px; font-weight: 600;"></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <span class="card-title">Global Range Controls</span>
+                <div style="margin-top: 14px;">
+                    <button class="btn-delete" style="width: 100%; padding: 10px;" onclick="resetAllProgress()">⚠️ Global Reset: Wipe All Operative Progress</button>
                 </div>
             </div>
 
@@ -249,7 +248,7 @@
 
     <script src="/common.js"></script>
     <script>
-       async function loadUsers() {
+        async function loadUsers() {
             try {
                 const response = await fetch('/api/users');
                 if (!response.ok) return;
@@ -276,6 +275,7 @@
                 document.getElementById('lastUpdated').innerText = 'Synced: ' + new Date().toLocaleTimeString();
             } catch (err) { console.error(err); }
         }
+
         async function loadIncidentLogs() {
             try {
                 const response = await fetch('/api/dashboard/logs');
@@ -330,7 +330,7 @@
         }
 
         async function checkAnomalyStatus() {
-            const card = document.getElementById('activeAnomalyCard');
+            const card = document.getElementById('anomaly-card');
             if (!card || card.style.display === 'none') return;
             try {
                 const res = await fetch('/api/threats/status');
@@ -413,28 +413,28 @@
         document.addEventListener('DOMContentLoaded', () => { refreshAll(); setInterval(refreshAll, 5000); });
         
         async function resetProgress(id) {
-    if (!confirm(`Are you sure you want to wipe all XP and completed challenges for Agent #${id}?`)) return;
-    const response = await fetch(`/api/users/${id}/reset-progress`, { method: 'POST' });
-    if (response.ok) {
-        alert('Agent progress has been successfully reset.');
-        loadUsers();
-        loadLeaderboard();
-    } else {
-        alert('Failed to reset progress.');
-    }
-}
+            if (!confirm(`Are you sure you want to wipe all XP and completed challenges for Agent #${id}?`)) return;
+            const response = await fetch(`/api/users/${id}/reset-progress`, { method: 'POST' });
+            if (response.ok) {
+                alert('Agent progress has been successfully reset.');
+                loadUsers();
+                loadLeaderboard();
+            } else {
+                alert('Failed to reset progress.');
+            }
+        }
 
         async function resetAllProgress() {
-    if (!confirm('DANGER: This will wipe XP and completed challenges for EVERY operative across Cyber Quest. Proceed?')) return;
-    const response = await fetch('/api/users/reset-all-progress', { method: 'POST' });
-    if (response.ok) {
-        alert('Global range reset complete.');
-        loadUsers();
-        loadLeaderboard();
-    } else {
-        alert('Failed to execute global reset.');
-    }
-}
+            if (!confirm('DANGER: This will wipe XP and completed challenges for EVERY operative across Cyber Quest. Proceed?')) return;
+            const response = await fetch('/api/users/reset-all-progress', { method: 'POST' });
+            if (response.ok) {
+                alert('Global range reset complete.');
+                loadUsers();
+                loadLeaderboard();
+            } else {
+                alert('Failed to execute global reset.');
+            }
+        }
     </script>
 </body>
 </html>

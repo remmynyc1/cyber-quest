@@ -43,8 +43,8 @@ public class TrainingAdminController {
     }
 
     @GetMapping("/templates")
-    public List> templates() {
-        List> out = new ArrayList<>();
+    public List templates() {
+        List out = new ArrayList<>();
         for (PhishTemplate t : catalog.templates()) out.add(m("id", t.id(), "name", t.name(), "subject", t.subject()));
         return out;
     }
@@ -73,8 +73,8 @@ public class TrainingAdminController {
     }
 
     @GetMapping("/campaigns")
-    public List> list() {
-        List> out = new ArrayList<>();
+    public List list() {
+        List out = new ArrayList<>();
         for (PhishCampaign c : campaigns.findAllByOrderByLaunchedAtDesc()) out.add(campaignSummary(c));
         return out;
     }
@@ -100,7 +100,7 @@ public class TrainingAdminController {
         }
         List<UserAccount> learners = users.findAll().stream().filter(TrainingAdminController::isLearner).toList();
 
-        List> modules = new ArrayList<>();
+        List modules = new ArrayList<>();
         List<String[]> ids = new ArrayList<>();
         for (Scenario s : catalog.scenarios()) ids.add(new String[]{s.id(), s.title()});
         for (Inspect i : catalog.inspects()) ids.add(new String[]{i.id(), i.title()});
@@ -117,7 +117,7 @@ public class TrainingAdminController {
             if (d.getClickedAt() != null) v[0]++;
             if (d.getReportedAt() != null) v[1]++;
         }
-        List> people = new ArrayList<>();
+        List people = new ArrayList<>();
         for (UserAccount u : learners) {
             int done = 0, sum = 0;
             for (String[] id : ids) {

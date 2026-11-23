@@ -121,11 +121,11 @@
             <div class="metric-label">Active Threats</div>
             <div class="metric-value status-red" id="activeThreatsCount">-</div>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" style="display: none;">
             <div class="metric-label">Target Threat Key</div>
             <div class="metric-value" style="color: #E63946;">#E63946</div>
         </div>
-        <div class="metric-card">
+        <div class="metric-card" style ="display:none;" >
             <div class="metric-label">Sandbox Firewall</div>
             <div class="metric-value status-green">● pfSense Online</div>
         </div>
@@ -135,7 +135,7 @@
         <div>
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Active Personnel & Ingested Employees</span>
+                    <span class="card-title">Active Personnel & Employees</span>
                     <span class="subtitle" id="lastUpdated">Synced just now</span>
                 </div>
                 <table>
@@ -186,7 +186,7 @@
         </div>
 
         <div>
-            <div class="card" id="anomaly-card">
+            <div class="card" id="anomaly-card" style="display: none;">
                 <div class="card-header">
                     <span class="card-title">Active Security Anomaly</span>
                     <span class="badge-live" id="anomaly-badge" style="background: rgba(248, 113, 113, 0.15); color: var(--red); border-color: rgba(248, 113, 113, 0.3);">● ATTACK ACTIVE</span>
@@ -330,6 +330,8 @@
         }
 
         async function checkAnomalyStatus() {
+            const card = document.getElementById('activeAnomalyCard');
+            if (!card || card.style.display === 'none') return;
             try {
                 const res = await fetch('/api/threats/status');
                 if (!res.ok) return;

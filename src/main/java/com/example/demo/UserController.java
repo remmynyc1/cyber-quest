@@ -5,9 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -41,42 +40,23 @@ public class UserController {
         this.phishDeliveryRepository = phishDeliveryRepository;
         this.phishCampaignRepository = phishCampaignRepository;
     }
-private void clearUserAttempts(Long userId, String email) {
-    String safeEmail = email != null ? email : "";
-    try {
-        List  cols = jdbcTemplate.queryForList(
-         "SELECT table_name, column_name FROM information_schema.columns " +
-            "WHERE table_schema = 'public' " +
-            "AND column_name IN ('user_id', 'user_account_id', 'account_id', 'employee_id', 'trainee_id', 'learner_id', 'member_id', 'student_id', 'participant_id', 'owner_id', 'user_email', 'email', 'username') " +
-            "AND table_name <> 'user_account' AND table_name <> 'users'"
-        );
-        for (Object item : cols) {
-if (item instanceof Map<?, ?> row) {
-                Object tableObj = row.get("table_name");
-                Object colObj = row.get("column_name");
-                if (tableObj != null && colObj != null) {
-                    String table = tableObj.toString();
-                    String col = colObj.toString();
-                    int deleted = (col.contains("email") || col.equals("username"))
-                        ? jdbcTemplate.update("DELETE FROM " + table + " WHERE LOWER(" + col + ") = LOWER(?)", safeEmail)
-                        : (userId != null ? jdbcTemplate.update("DELETE FROM " + table + " WHERE " + col + " = ?", userId) : 0);
-                    if (deleted > 0) {
-                        System.out.println("Cleared " + deleted + " rows from " + table + "." + col);
-                    }
-                }
-            }
-        }
-    } catch (Exception ex) {
-        System.out.println("Attempt cleanup warning for user " + userId + ": " + ex.getMessage());
+
+    private static boolean isDemoSupervisor(Authentication auth) {
+        if (auth == null || auth.getName() == null) return false;
+        String email = auth.getName().trim().toLowerCase();
+        return email.startsWith("manager-demo-") && email.endsWith("@cyberquest.internal");
     }
-}
+
     @GetMapping
     public List<Dtos.UserView> getAllUsers() {
         return userRepository.findAll().stream().map(Dtos.UserView::of).toList();
     }
 
     @PostMapping
-    public ResponseEntity createUser(@Valid @RequestBody Dtos.CreateUserRequest req) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody Dtos.CreateUserRequest req, Authentication auth) {
+        if (isDemoSupervisor(auth)) {
+            return ResponseEntity.status(403).body(m("message", "Demo Supervisor accounts cannot create users."));
+        }
         String email = req.email().trim().toLowerCase();
         if (!ALLOWED_ROLES.contains(req.role())) {
             return ResponseEntity.badRequest().body(m("message", "Unknown role."));
@@ -96,8 +76,11 @@ if (item instanceof Map<?, ?> row) {
         return ResponseEntity.ok(m("id", u.getId(), "email", u.getEmail(), "tempPassword", temp));
     }
 
-    @PostMapping  ("/{id}/reset-password")
-    public ResponseEntity resetPassword(@PathVariable Long id) {
+    @PostMapping("/{id}/reset-password")
+    public ResponseEntity<?> resetPassword(@PathVariable Long id, Authentication auth) {
+        if (isDemoSupervisor(auth)) {
+            return ResponseEntity.status(403).body(m("message", "Demo Supervisor accounts cannot reset passwords."));
+        }
         return userRepository.findById(id).map(u -> {
             String temp = Dtos.tempPassword();
             u.setPasswordHash(passwordEncoder.encode(temp));
@@ -110,23 +93,26 @@ if (item instanceof Map<?, ?> row) {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, Authentication auth) {
+        if (isDemoSupervisor(auth)) {
+            return ResponseEntity.status(403).body(m("message", "Demo Supervisor accounts cannot delete operatives."));
+        }
         return userRepository.findById(id).map(u -> {
             if (u.getEmail().equalsIgnoreCase(auth.getName())) {
-                return ResponseEntity.status(409).<Void>build();
+                return ResponseEntity.status(409).build();
             }
             userRepository.deleteById(id);
-            return ResponseEntity.ok().<Void>build();
+            return ResponseEntity.ok().build();
         }).orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/register")
-    public ResponseEntity selfRegister(@Valid @RequestBody Dtos.SelfRegisterRequest req) {
+    public ResponseEntity<?> selfRegister(@Valid @RequestBody Dtos.SelfRegisterRequest req) {
         String email = req.email().trim().toLowerCase();
         if (userRepository.existsByEmail(email)) {
             return ResponseEntity.status(409).body(m("message", "That email is already registered."));
         }
-        
+
         String problem = AccountController.policyProblem(req.password(), "", email);
         if (problem != null) {
             return ResponseEntity.badRequest().body(m("message", problem));
@@ -145,7 +131,7 @@ if (item instanceof Map<?, ?> row) {
     }
 
     @PostMapping("/demo-signup")
-    public ResponseEntity createDemoAccount(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> createDemoAccount(@RequestBody Map<String, String> payload) {
         String roleType = payload.getOrDefault("role", "employee").trim().toLowerCase();
         boolean isManager = roleType.equals("manager");
         String role = isManager ? "ROLE_MANAGER" : "ROLE_EMPLOYEE";
@@ -166,9 +152,12 @@ if (item instanceof Map<?, ?> row) {
         return ResponseEntity.ok(Map.of("email", email, "password", password));
     }
 
-   @PostMapping("/{id}/reset-progress")
-    @Transactional  
-    public ResponseEntity<?> resetProgress(@PathVariable Long id) {
+    @PostMapping("/{id}/reset-progress")
+    @Transactional
+    public ResponseEntity<?> resetProgress(@PathVariable Long id, Authentication auth) {
+        if (isDemoSupervisor(auth)) {
+            return ResponseEntity.status(403).body(m("message", "Demo Supervisor accounts cannot reset operative progress."));
+        }
         return userRepository.findById(id).map(u -> {
             u.setTotalXp(0);
             if (u.getCompletedChallengeIds() != null) {
@@ -176,7 +165,6 @@ if (item instanceof Map<?, ?> row) {
             }
             userRepository.saveAndFlush(u);
 
-            // Delete all training module attempts and phishing deliveries for this specific user
             String email = u.getEmail();
             simulationAttemptRepository.findAll().stream()
                 .filter(a -> email.equalsIgnoreCase(a.getUserEmail()))
@@ -191,8 +179,11 @@ if (item instanceof Map<?, ?> row) {
     }
 
     @PostMapping("/reset-all-progress")
-    @Transactional 
-    public ResponseEntity<?> resetAllProgress() {
+    @Transactional
+    public ResponseEntity<?> resetAllProgress(Authentication auth) {
+        if (isDemoSupervisor(auth)) {
+            return ResponseEntity.status(403).body(m("message", "Demo Supervisor accounts cannot trigger a global reset."));
+        }
         List<UserAccount> users = userRepository.findAll();
         for (UserAccount u : users) {
             u.setTotalXp(0);
@@ -203,32 +194,10 @@ if (item instanceof Map<?, ?> row) {
         userRepository.saveAll(users);
         userRepository.flush();
 
-        // Wipe all training attempts, phishing deliveries, and launched campaigns globally
         simulationAttemptRepository.deleteAllInBatch();
         phishDeliveryRepository.deleteAllInBatch();
         phishCampaignRepository.deleteAllInBatch();
 
         return ResponseEntity.ok(Map.of("message", "All operative progress globally reset."));
     }
-
-    private void resetInboxStatus(Long userId, String email) {
-    try {
-        List inboxCols = jdbcTemplate.queryForList(
-            "SELECT table_name, column_name FROM information_schema.columns " +
-            "WHERE table_schema = 'public' " +
-            "AND table_name LIKE '%inbox%' " +
-            "AND column_name = 'status'"
-        );
-        for (Object item : inboxCols) {
-            if (item instanceof Map<?, ?> row) {
-                Object tableObj = row.get("table_name");
-                if (tableObj != null) {
-                    jdbcTemplate.update("UPDATE " + tableObj + " SET status = 'NEW'");
-                }
-            }
-        }
-    } catch (Exception ex) {
-        System.out.println("Inbox reset warning: " + ex.getMessage());
-    }
-}
 }
